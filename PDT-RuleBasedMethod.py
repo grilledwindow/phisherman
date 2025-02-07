@@ -29,7 +29,11 @@ test_urls = [
     "https://paypal.com",                # Safe
     "https://faceboook.com",             # Typosquatting
     "https://google-secure.com",         # Typosquatting
-    "https://microsoft.com"              # Safe
+    "https://microsoft.com",             # Safe
+    "https://google.com",
+    "https://login.paypal.com",          # False (Safe)
+    "https://paypal.scammer.com",        # True (Spoofing)
+    "https://secure-paypal.com"          # True (Spoofing)
 ]
 
 for url in test_urls:
