@@ -3,10 +3,16 @@ window.addEventListener('load', async () => {
         let targets = {};
         let body = document.getElementById(':1');
         body.addEventListener('mouseover', (event) => {
-            const target = event.target;
+            let target = event.target;
+
+            // covers e.g. <a><img></a>
+            if (target.parentElement instanceof HTMLAnchorElement) {
+                target = target.parentElement;
+            }
+
             if (!(target instanceof HTMLAnchorElement) || !target.hasAttribute('href')) {
                 return;
-            } else if (targets.hasOwnProperty(target?.id)) {
+            } else if (target.id && targets.hasOwnProperty(target.id)) {
                 return;
             }
 
