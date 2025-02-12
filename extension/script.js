@@ -1,7 +1,8 @@
+let popup;
 window.addEventListener('load', async () => {
-    let popup = document.createElement('div');
+    popup = document.createElement('div');
     popup.id = 'p1';
-    popup.style=  { display: 'none', position: 'absolute' };
+    popup.style.display = 'none';
 
     if (document.readyState == 'complete') {
         let targets = {};
@@ -24,8 +25,13 @@ window.addEventListener('load', async () => {
                 let targetX = rect.left;
                 let targetY = rect.top;
                 console.log(targetX, targetY);
-                popup.style = { display: 'block', left: targetX + 'px', right: targetY + 'px' };
-                popup.appenedChild(document.createTextNode(target.href));
+
+                popup.style.display = 'block';
+                popup.style.position = 'absolute';
+                popup.style.left = targetX + 'px';
+                popup.style.top = targetY + 'px';
+                popup.innerHTML = target.href;
+
                 return;
             }
 
