@@ -1,19 +1,39 @@
 window.addEventListener('load', async () => {
+    let popup = document.createElement('div');
+    popup.id = 'p1';
+    popup.style=  { display: 'none', position: 'absolute' };
+
     if (document.readyState == 'complete') {
         let targets = {};
         let body = document.getElementById(':1');
+        
+        body.appendChild(popup);
         body.addEventListener('mouseover', (event) => {
-            const target = event.target;
+            let target = event.target;
+
+            // covers e.g. <a><img></a>
+            if (target.parentElement instanceof HTMLAnchorElement) {
+                target = target.parentElement;
+            }
+
             if (!(target instanceof HTMLAnchorElement) || !target.hasAttribute('href')) {
+                popup.style.display = 'none';
                 return;
-            } else if (targets.hasOwnProperty(target?.id)) {
+            } else if (target.id && targets.hasOwnProperty(target.id)) {
+                let rect = target.getBoundingClientRect();
+                let targetX = rect.left;
+                let targetY = rect.top;
+                console.log(targetX, targetY);
+                popup.style = { display: 'block', left: targetX + 'px', right: targetY + 'px' };
+                popup.appenedChild(document.createTextNode(target.href));
                 return;
             }
 
             target.id = Math.ceil(Math.random() * 100000);
-            targets[target.id] = 0;
+            targets[target.id] = target.href;
 
             target.addEventListener('mouseover', function() {
+
                 targets[target.id] = targets[target.id] + 1;
                 console.log(target.id, targets[target.id]);
             });
