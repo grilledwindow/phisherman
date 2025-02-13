@@ -1,8 +1,9 @@
 import tldextract
 from Levenshtein import distance
 
-trusted_domains = ["paypal.com", "google.com", "microsoft.com", "facebook.com"]
 
+
+trusted_domains = ["paypal.com", "google.com", "microsoft.com", "facebook.com"]
 
 
 def extract_main_domain(url):
@@ -40,4 +41,3 @@ for url in test_urls:
     print("-------")
     print(extract_main_domain(url))
     print(is_typosquatted(url))
-    
