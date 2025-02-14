@@ -1,18 +1,9 @@
 import tldextract
 from Levenshtein import distance
 
-trusted_domains = ["paypal.com", "google.com", "microsoft.com", "facebook.com",
-    "dbs.com.sg",
-    "posb.com.sg",
-    "ocbc.com",
-    "uob.com.sg",
-    "sc.com",
-    "cimb.com.sg",
-    "hsbc.com.sg",
-    "maybank2u.com.sg",
-    "citibank.com.sg",
-    "bankofchina.com",
-    "rhbgroup.com.sg"]
+
+
+trusted_domains = ["paypal.com", "google.com", "microsoft.com", "facebook.com"]
 
 
 
@@ -54,4 +45,3 @@ for url in test_urls:
     print("-------")
     print(extract_main_domain(url))
     print(is_typosquatted(url))
-    
