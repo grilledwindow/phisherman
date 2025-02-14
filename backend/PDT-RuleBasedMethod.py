@@ -1,7 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Flask, Request, jsonify, render_template
 import tldextract
 from Levenshtein import distance
 
+# app = Flask(__name__)
+
+# @app.route('/')
+# def index():
+#     return render_template('gmail.html')
 
 trusted_domains = ["paypal.com", "google.com", "microsoft.com", "facebook.com"]
 
@@ -41,7 +46,13 @@ def is_subdomain_spoofed(url):
 
     
 
-def analyse_url(url):
+# @app.route('/check-url', methods=["GET", "POST"])
+def check_url(url):
+    # data = request.json
+    # url = data.get('url')
+
+    # if not url:
+    #     return jsonify({"Error": "URL is required"}), 400
 
     typosquatting_result = is_typosquatted(url)
     if typosquatting_result:
@@ -53,7 +64,8 @@ def analyse_url(url):
     
     return f"⚠️ Unsure: {url} (Not in trusted domains)"
 
-
+# if __name__ == '__main__':
+#     app.run(debug=True)
 
 test_urls = [
 
@@ -73,6 +85,6 @@ test_urls = [
 
 for url in test_urls:
     print("-------")
-    print(analyse_url(url))
+    print(check_url(url))
 
 
