@@ -1,1 +1,6 @@
 extension/gmail.html
+
+backend/templates/gmail.html
+backend/.venv
+backend/__pycache__
+
