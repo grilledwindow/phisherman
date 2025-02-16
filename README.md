@@ -1,12 +1,16 @@
 # Phisherman
 
 ## Setup
+Reuirements:
+- Python3
+- Chromium-based browser
 
 ### Retrieving offline copy of email
+Since the page needs to be refreshed every time the extension is updated, an offline copy is much faster for testing changes.
 1. In your browser, navigate to gmail (login if needed)
 2. Go to a random email
 3. In dev console (Ctrl + Shift + I), enter the following line:
-`let body = document.getElementById(":1"); body`
+`let body = document.querySelector('div.a3s.aiL'); body`
 4. Right click on the resulting element and "Copy outerHTML"
 5. Paste it in the project file `backend/templates/gmail.html`
 
