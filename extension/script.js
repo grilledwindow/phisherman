@@ -66,6 +66,13 @@ window.addEventListener('load', async () => {
 
                 showTracer(left, top, width, height);
                 showPopup(left, top, width, height, targets[event.target.id]);
+
+                fetch(`http://localhost:5000/check_url?url=${event.target.href}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log('spoof:', data.spoof);
+                        console.log('typosquat:', data.typosquat);
+                    })
             });
         });
 

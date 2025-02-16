@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "content_scripts": [
     {
-      "matches": ["https://mail.google.com/*", "file:///*"],
+      "matches": ["https://mail.google.com/*", "file:///*", "http://localhost:*/gmail"],
       "js": ["script.js"]
     }
   ]
