@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify, render_template
 import tldextract
+from trusted_domains import trusted_domains
 from Levenshtein import distance
 
 app = Flask(__name__)
-trusted_domains = ["paypal.com", "google.com", "microsoft.com", "facebook.com"]
 
 @app.route("/")
 def index():
