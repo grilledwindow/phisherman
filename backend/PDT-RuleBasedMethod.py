@@ -50,9 +50,14 @@ def is_subdomain_spoofed(url):
 def has_homoglyph(url):
 
     if bool(confusable_homoglyphs.confusables.is_dangerous(url)):
-        # return(confusable_homoglyphs.confusables.is_confusable(url, preferred_aliases=['latin']))
+        characters =[]
+
+        confusable = confusable_homoglyphs.confusables.is_confusable(url, greedy=True, preferred_aliases=['latin'])
         
-        return f"⚠️ homoglyph spoofing detected: {url}"
+        for item in confusable:
+            characters.append(item['character'])
+
+        return f"⚠️ homoglyph detected: {characters} in {url}"
     
 
 
@@ -102,9 +107,10 @@ test_urls = [
     "https://zicotrust.com",
     "https://z1cotrust.com",
     "https://www.uobgroup.com/uobgroup/newsroom/index.page",
-    "https://pаyраl.com",
+    "https://раyраl.com",
     "https://pаypal.com",
-    "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package"
+    "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
+
     
 
 ]

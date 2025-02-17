@@ -54,7 +54,20 @@ def check_subdomain_spoofed(subdomain):
 def check_homoglyph(url):
 
     if bool(confusable_homoglyphs.confusables.is_dangerous(url)):
-        # for future experimential use
-        # return(confusable_homoglyphs.confusables.is_confusable(url, preferred_aliases=['latin']))
+        characters =[]
+
+        confusable = confusable_homoglyphs.confusables.is_confusable(url, greedy=True, preferred_aliases=['latin'])
         
-        return f"⚠️ homoglyph spoofing detected: {url}"
+        for item in confusable:
+            characters.append(item['character'])
+
+        return f"⚠️ homoglyph detected: {characters} in {url}"
+    
+# //more simplier algo (escapes once 1 homoglyph character is detected)
+# //less processing, might be more feasible if finding out all homoglyph char isn't neccessary
+
+    # if bool(confusable_homoglyphs.confusables.is_dangerous(url)):
+
+    #     character = confusable_homoglyphs.confusables.is_confusable(url, preferred_aliases=['latin'])[0]['character']
+        
+    #     return f"⚠️ homoglyph detected: {character} in {url}"
