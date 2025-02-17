@@ -1184,7 +1184,10 @@ def is_subdomain_spoofed(url):
 
             return f"⚠️ Possible subdomain spoofing detected: {url} (Contains trusted name '{trusted_base}' in subdomain)"      
 
-    
+
+
+
+
 
 # @app.route('/check-url', methods=["GET", "POST"])
 def check_url(url):
@@ -1201,6 +1204,9 @@ def check_url(url):
     subdomain_spoofing_result = is_subdomain_spoofed(url)
     if subdomain_spoofing_result:
         return subdomain_spoofing_result
+    
+
+
     
     return f"⚠️ Unsure: {url} (Not in trusted domains)"
     #return jsonify({f"⚠️ Unsure: {url} (Not in trusted domains)"})
@@ -1222,7 +1228,8 @@ test_urls = [
     "https://dbs.com",                   # True (Spoofing)
     "https://secure.paypal.com",
     "https://zicotrust.com",
-    "https://z1cotrust.com"
+    "https://z1cotrust.com",
+    "https://www.uobgroup.com/uobgroup/newsroom/index.page"
 
 ]
 
