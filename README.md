@@ -22,6 +22,14 @@ Since the page needs to be refreshed every time the extension is updated, an off
 5. Run app: `flask run`
 
 ### Extension
+#### TailwindCSS
+The standalone CLI is used because we're not using the npm ecosystem yet.
+1. Get the latest release [here](https://github.com/tailwindlabs/tailwindcss/releases/tag/v4.0.6)
+2. Move it to the `extension` foldee and rename to `tw`
+3. Grant executable permission: `chmod +x tw`
+4. Compile and watch for changes: `./tw -w -o style.css`
+
+#### Extension Installation
 Currently, the extension only works on Chrome/Chromium browsers, tested on Brave.
 1. In the browser, go to `brave://extensions`
 2. Enable developer mode

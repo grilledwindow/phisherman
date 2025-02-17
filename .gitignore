@@ -1,4 +1,6 @@
 extension/gmail.html
+extension/tw
+extension/style.css
 
 backend/templates/gmail.html
 backend/.venv
