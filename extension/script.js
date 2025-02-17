@@ -101,10 +101,32 @@ function showTracer(left, top, width, height) {
 function showPopup(left, top, width, height, html) {
     popup.style.display = 'block';
     popup.style.position = 'absolute';
-    popup.style.left = left + 'px';
-    popup.style.top = top + 'px';
-    popup.style.width = width + 'px';
-    popup.style.height = height + 'px';
-    popup.innerHTML = html;
+    popup.style.left = left + 20 + 'px';
+    popup.style.top = top + height * 0.66 + 'px';
+    popup.style.maxWidth = window.screen.width - left - 50 + 'px';
+
+    popup.className = 'p-2 bg-[#F2F0E4] h-fit rounded-xl break-words shadow-xl';
+    popup.innerHTML = `<p>${html}</p>`;
+
+    let buttonContainer = document.createElement('div');
+    buttonContainer.className = 'mt-4 mb-2 flex w-full space-x-2 justify-end';
+
+    let cancelButton = document.createElement('button');
+    cancelButton.innerHTML = 'Cancel';
+    cancelButton.className = 'py-1 px-3 rounded-full';
+
+    let openButton = document.createElement('button');
+    openButton.innerHTML = 'Open';
+    openButton.className = 'py-1 px-3 bg-[#DD8888] rounded-full';
+
+    buttonContainer.appendChild(cancelButton);
+    buttonContainer.appendChild(openButton);
+    popup.appendChild(buttonContainer);
+}
+
+function addClass(element, classStr) {
+    for (className in classStr.split(' ')) {
+        element.className += className;
+    }
 }
 
