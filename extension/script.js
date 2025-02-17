@@ -29,7 +29,6 @@ function main(body) {
     //     }
     //     console.log(body);
     // }
-    // console.log(body);
     let html = document.querySelector('html');
     html.appendChild(popup);
     html.appendChild(tracer);
@@ -58,7 +57,6 @@ function main(body) {
         targets[target.id] = target.href;
 
         target.addEventListener('mouseenter', (event) => {
-            console.log(event);
             const rect = event.target.getBoundingClientRect();
             const left = rect.left + window.scrollX;
             const top = rect.top + window.scrollY;
@@ -84,9 +82,10 @@ function main(body) {
 }
 
 function createHiddenDiv(id) {
-    div = document.createElement(div);
+    let div = document.createElement('div');
     div.id = id;
     div.style.display = 'none';
+    return div;
 }
 
 function showTracer(left, top, width, height) {
