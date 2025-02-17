@@ -1,8 +1,10 @@
 
+import confusable_homoglyphs.confusables
 from flask import Flask, Request, jsonify, render_template
 import tldextract
 from trusted_domains import trusted_domains
 from Levenshtein import distance
+import confusable_homoglyphs
 
 # app = Flask(__name__)
 
@@ -45,7 +47,13 @@ def is_subdomain_spoofed(url):
             return f"⚠️ Possible subdomain spoofing detected: {url} (Contains trusted name '{trusted_base}' in subdomain)"      
 
 
+def has_homoglyph(url):
 
+    if bool(confusable_homoglyphs.confusables.is_dangerous(url)):
+        # return(confusable_homoglyphs.confusables.is_confusable(url, preferred_aliases=['latin']))
+        
+        return f"⚠️ homoglyph spoofing detected: {url}"
+    
 
 
 
@@ -57,6 +65,10 @@ def check_url(url):
     # if not url:
     #     return jsonify({"Error": "URL is required"}), 400
 
+    homoglyph_result = has_homoglyph(url)
+    if homoglyph_result:
+        return homoglyph_result
+    
     typosquatting_result = is_typosquatted(url)
     if typosquatting_result:
         return typosquatting_result
@@ -65,7 +77,7 @@ def check_url(url):
     if subdomain_spoofing_result:
         return subdomain_spoofing_result
     
-
+    
 
     
     return f"⚠️ Unsure: {url} (Not in trusted domains)"
@@ -89,7 +101,11 @@ test_urls = [
     "https://secure.paypal.com",
     "https://zicotrust.com",
     "https://z1cotrust.com",
-    "https://www.uobgroup.com/uobgroup/newsroom/index.page"
+    "https://www.uobgroup.com/uobgroup/newsroom/index.page",
+    "https://pаyраl.com",
+    "https://pаypal.com",
+    "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package"
+    
 
 ]
 

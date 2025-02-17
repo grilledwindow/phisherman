@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 import tldextract
 from trusted_domains import trusted_domains
 from Levenshtein import distance
+import confusable_homoglyphs
 
 app = Flask(__name__)
 
@@ -21,10 +22,11 @@ def check_url():
         return {"error": "URL is required"}, 400
     
     extracted = tldextract.extract(url)
+    homoglyph_results = check_homoglyph(url)
     typosquat_results = check_typosquat(f"{extracted.domain}.{extracted.suffix}")
     spoof_results = check_subdomain_spoofed(extracted.subdomain)
 
-    return {"typosquat": typosquat_results, "spoof": spoof_results}, 200
+    return {"homoglyph" : homoglyph_results, "typosquat": typosquat_results, "spoof": spoof_results}, 200
 
 
 def check_typosquat(domain, threshold=2):
@@ -48,3 +50,11 @@ def check_subdomain_spoofed(subdomain):
 
     return possible_spoofed_subdomains
 
+
+def check_homoglyph(url):
+
+    if bool(confusable_homoglyphs.confusables.is_dangerous(url)):
+        # for future experimential use
+        # return(confusable_homoglyphs.confusables.is_confusable(url, preferred_aliases=['latin']))
+        
+        return f"⚠️ homoglyph spoofing detected: {url}"
