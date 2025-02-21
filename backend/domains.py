@@ -1136,3 +1136,14 @@ trusted_domains = [
 'zkb.ch',
 'zyg-am.com'
 ]
+
+
+shortened_domains =[
+"bit.ly", 
+"tinyurl.com", 
+"t.co",
+"goo.gl",
+"shorturl.at", 
+"is.gd", 
+"buff.ly"
+]
