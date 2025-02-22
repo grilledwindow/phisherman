@@ -5,8 +5,8 @@
   "content_scripts": [
     {
       "matches": ["https://mail.google.com/*", "file:///*", "http://localhost:*/gmail"],
-      "js": ["script.js"],
-      "css": ["style.css"]
+      "js": ["script.js"]
+      
     }
   ]
 }

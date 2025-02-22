@@ -1,3 +1,4 @@
+import confusable_homoglyphs.confusables
 from flask import Flask, request, jsonify, render_template
 import tldextract
 import domains
@@ -31,7 +32,7 @@ def check_url():
     typosquat_results = check_typosquat(f"{extracted.domain}.{extracted.suffix}")
     spoof_results = check_subdomain_spoofed(extracted.subdomain)
 
-    return {"embedded_url":embedded_check_result, "homoglyph" : homoglyph_results, "typosquat": typosquat_results, "spoof": spoof_results}, 200
+    return {"embedded_url":embedded_check_result, "homoglyph":homoglyph_results, "typosquat": typosquat_results, "spoof": spoof_results}, 200
 
 
 def check_embedded_url_in_query(url):
@@ -45,15 +46,16 @@ def check_embedded_url_in_query(url):
         embedded_url = query_params['url'][0]  # Get the first value (assuming only one 'url' parameter)
         
         # Run checks on the embedded URL
-        homoglyph_result = has_homoglyph(embedded_url)
+
+        homoglyph_result = check_homoglyph(embedded_url)
         if homoglyph_result:
             return homoglyph_result
         
-        typosquatting_result = is_typosquatted(embedded_url)
+        typosquatting_result = check_typosquat(embedded_url)
         if typosquatting_result:
             return typosquatting_result
         
-        subdomain_spoofing_result = is_subdomain_spoofed(embedded_url)
+        subdomain_spoofing_result = check_subdomain_spoofed(embedded_url)
         if subdomain_spoofing_result:
             return subdomain_spoofing_result
 
@@ -102,8 +104,8 @@ def check_subdomain_spoofed(subdomain):
 def check_homoglyph(url):
 
     if bool(confusable_homoglyphs.confusables.is_dangerous(url)):
+            
         characters =[]
-
         confusable = confusable_homoglyphs.confusables.is_confusable(url, greedy=True, preferred_aliases=['latin'])
         
         for item in confusable:
