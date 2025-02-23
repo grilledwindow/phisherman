@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Phisherman",
+  "version": "0.0.1",
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*", "file:///*", "http://localhost:*/gmail"],
+      "js": ["./assets/index.js"]
+    }
+  ]
+}
+
