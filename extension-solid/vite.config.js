@@ -13,8 +13,8 @@ export default defineConfig({
             main: './src/index.jsx'
         },
         output: {
-            entryFileNames: 'index.js'
-        }
+            entryFileNames: 'index.js',
+            assetFileNames: (assetInfo) => '[name][extname]'        }
     },
     outDir: 'unpacked/assets/',
     target: 'modules',
