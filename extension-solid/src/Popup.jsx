@@ -1,5 +1,4 @@
 import { onMount } from 'solid-js';
-import './style.css';
 
 function Popup() {
     onMount(() => {
@@ -8,7 +7,7 @@ function Popup() {
     });
 
     return (
-        <div id="popup" className="absolute bg-black">hi</div>
+        <div id="popup" class="absolute bg-black">hi</div>
     )
 }
 
