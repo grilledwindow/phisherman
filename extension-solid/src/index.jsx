@@ -1,6 +1,7 @@
 /* @refresh reload */
 import { render } from 'solid-js/web';
 import Popup from './Popup';
+import './style.css';
 
 let body;
 const poll = setInterval(() => {
