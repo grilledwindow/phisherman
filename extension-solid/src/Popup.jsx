@@ -1,7 +1,7 @@
 import { onMount } from 'solid-js';
 
-function App() {
+function Popup() {
     onMount(() => console.log('mounted'));
 }
 
-export default App;
+export default Popup;
