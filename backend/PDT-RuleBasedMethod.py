@@ -7,6 +7,8 @@ from Levenshtein import distance
 import confusable_homoglyphs
 import requests
 import urllib.parse
+import whois
+from datetime import datetime
 
 # app = Flask(__name__)
 
@@ -66,6 +68,67 @@ def expand_shortened_url(short_url):
 
 # Test the function
 # 
+
+
+def get_whois(domain):
+
+
+    try:
+        domain_info = whois.whois(domain)
+        creation_date = domain_info.creation_date
+
+        # Handle cases where creation_date might be a list
+        if isinstance(creation_date, list):
+            creation_date = creation_date[0]
+
+        # Ensure creation_date is a datetime object
+        if isinstance(creation_date, datetime):
+            domain_age_days = (datetime.now() - creation_date).days
+            risk_level = "Low Risk" if domain_age_days >= 90 else f"High Risk, {domain} is less than 90 days old."
+            return {
+                "domain": domain,
+                "creation_date": creation_date,
+                "domain_age_days": domain_age_days,
+                "risk_level": risk_level
+            }
+        else:
+            return {
+                "domain": domain,
+                "error": "Creation date is not available"
+            }
+
+    except Exception as e:
+        error_message = str(e)
+        if "No match for" in error_message:
+            return {
+                "domain": domain,
+                "error": "Domain does not exist."
+            }
+        else:
+            return {
+                "domain": domain,
+                "error": f"WHOIS lookup failed: {error_message}"
+            }
+
+    # try:
+    #     domain_info = whois.whois(domain)
+    #     creation_date = domain_info.creation_date
+
+    #     if creation_date:
+    #         domain_age = (datetime.now() - creation_date).days
+            
+    #         if domain_age <90:
+    #             return "High Risk, Website is less than 90 days old."
+
+    #     return domain_age
+    
+    # except Exception as e:
+    #     error_message = str(e)
+    #     if "No match for" in error_message:
+    #         return f"Domain does not exist: {domain}."
+    #     else: 
+    #         return "WHOIS lookup failed"
+    
 
 def extract_main_domain(url):
     extracted = tldextract.extract(url)
@@ -170,6 +233,10 @@ def check_url(url):
     if subdomain_spoofing_result:
         return subdomain_spoofing_result
     
+    whois_result = get_whois(expanded_url)
+    if whois_result:
+        return whois_result
+    
     
 
     
@@ -200,8 +267,8 @@ test_urls = [
     "https://shorturl.at/ZAaws",             #typosquat + shortened
     "https://tinyurl.com/fake-google",
     "https://example.com/login?redirect_url=https://phishing-site.com",
-    "https://example.com/?action=redirect&next=https://fake-site.com"
-
+    "https://example.com/?action=redirect&next=https://fake-site.com",
+    "https://paypalknkkn.com"
 
 ]
 
