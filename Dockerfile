@@ -5,14 +5,17 @@ RUN apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-d
 RUN wget https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz
 RUN tar -xf Python-3.12.0.tgz
 RUN cd ./Python-3.12.0/ && ./configure --enable-optimizations
-RUN cd ./Python-3.12.0/ && make -j 4
+RUN cd ./Python-3.12.0/ && make -j 12
 RUN cd ./Python-3.12.0/ && make altinstall
 
+RUN ollama serve & sleep 5 && ollama pull llama3.1
+RUN pip3.12 install ollama Flask
+
 WORKDIR /root
+COPY app.py .
+COPY run.sh .
+RUN chmod +x run.sh
 
-COPY . /root/
+EXPOSE 5000
 
-RUN ollama serve & sleep 5 && ollama pull deepseek-r1:8b
-RUN pip3.12 install ollama
-
-CMD ["bash", "sleep", "infinity"]
+ENTRYPOINT ["/root/run.sh"]
