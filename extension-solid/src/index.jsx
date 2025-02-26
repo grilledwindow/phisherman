@@ -7,10 +7,12 @@ import Tracer from './Tracer';
 import './style.css';
 
 let body;
+let targets = {};
+
 const [pos, setPos] = createStore({ top: 0, left: 0, width: 0, height: 0 });
 const [isLink, setIsLink] = createSignal(false);
 const tracerId = 'tracer';
-const popupId = 'tracer';
+const popupId = 'popup';
 
 const poll = setInterval(() => {
     body = document.querySelector('div.a3s.aiL');
@@ -18,13 +20,9 @@ const poll = setInterval(() => {
         return;
     }
 
-    render(() => <Tracer id={tracerId} pos={pos} isLink={isLink} />, body);
-    main(body, setPos, setIsLink);
     clearInterval(poll);
-}, 500);
+    render(() => <Tracer id={tracerId} pos={pos} isLink={isLink} />, body);
 
-function main(body, setPos, setIsLink) {
-    let targets = {};
     body.addEventListener('mouseover', (event) => {
         let target = event.target;
 
@@ -50,11 +48,12 @@ function main(body, setPos, setIsLink) {
 
         target.addEventListener('mouseenter', (event) => {
             setIsLink(true);
-            const rect = event.target.getBoundingClientRect();
-            setPos('left', rect.left + window.scrollX);
-            setPos('top', rect.top + window.scrollY);
+            const { left, top } = event.target.getBoundingClientRect();
+            setPos('left', left + window.scrollX);
+            setPos('top', top + window.scrollY);
             setPos('width', event.target.offsetWidth);
             setPos('height', event.target.offsetHeight);
         });
     });
-}
+}, 500);
+
