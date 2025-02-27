@@ -11,7 +11,7 @@ let targets = {};
 
 const [pos, setPos] = createStore({ top: 0, left: 0, width: 0, height: 0 });
 const [isLink, setIsLink] = createSignal(false);
-const [popupText, setPopupText] = createSignal('');
+const [targetLink, setTargetLink] = createSignal('');
 const tracerId = 'tracer';
 const popupId = 'popup';
 
@@ -24,8 +24,9 @@ const poll = setInterval(() => {
     // this is actually sooo important.
     // if appended to <body> instead of <html>, the popup disappears right after hovering over its child elements, i.e. <p>
     const html = document.querySelector('html');
+    const closePopup = () => setIsLink(false);
     render(() => <Tracer id={tracerId} pos={pos} isLink={isLink} />, html);
-    render(() => <Popup id={popupId} pos={pos} isLink={isLink} popupText={popupText} />, html);
+    render(() => <Popup id={popupId} pos={pos} isLink={isLink} link={targetLink} onCancel={closePopup} />, html);
 
     body.addEventListener('mouseover', (event) => {
         let target = event.target;
@@ -53,7 +54,7 @@ const poll = setInterval(() => {
             setPos('top', top + window.scrollY);
             setPos('width', event.target.offsetWidth);
             setPos('height', event.target.offsetHeight);
-            setPopupText(event.target.href);
+            setTargetLink(event.target.href);
             setIsLink(true);
 
             fetch('http://localhost:5000/query_url', {
