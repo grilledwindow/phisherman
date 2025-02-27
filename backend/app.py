@@ -6,6 +6,8 @@ from Levenshtein import distance
 import confusable_homoglyphs
 import requests
 import urllib.parse
+import whois
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -31,8 +33,9 @@ def check_url():
     homoglyph_results = check_homoglyph(expanded_url)
     typosquat_results = check_typosquat(f"{extracted.domain}.{extracted.suffix}")
     spoof_results = check_subdomain_spoofed(extracted.subdomain)
+    whois_results = get_whois(expanded_url)
 
-    return {"embedded_url":embedded_check_result, "homoglyph":homoglyph_results, "typosquat": typosquat_results, "spoof": spoof_results}, 200
+    return {"embedded_url":embedded_check_result, "homoglyph":homoglyph_results, "typosquat": typosquat_results, "spoof": spoof_results, "whois":whois_results}, 200
 
 
 def check_embedded_url_in_query(url):
@@ -121,3 +124,40 @@ def check_homoglyph(url):
     #     character = confusable_homoglyphs.confusables.is_confusable(url, preferred_aliases=['latin'])[0]['character']
         
     #     return f"⚠️ homoglyph detected: {character} in {url}"
+
+def get_whois(domain):
+    try:
+        domain_info = whois.whois(domain)
+        creation_date = domain_info.creation_date
+
+        # Handle cases where creation_date might be a list
+        if isinstance(creation_date, list):
+            creation_date = creation_date[0]
+
+        # Ensure creation_date is a datetime object
+        if isinstance(creation_date, datetime):
+            domain_age_days = (datetime.now() - creation_date).days
+            risk_level = "Low Risk" if domain_age_days >= 90 else f"High Risk, {domain} is less than 90 days old."
+            return {
+                "domain": domain,
+                "domain_age_days": domain_age_days,
+                "risk_level": risk_level
+            }
+        else:
+            return {
+                "domain": domain,
+                "error": "Creation date is not available"
+            }
+
+    except Exception as e:
+        error_message = str(e)
+        if "No match for" in error_message:
+            return {
+                "domain": domain,
+                "error": "Domain does not exist."
+            }
+        else:
+            return {
+                "domain": domain,
+                "error": f"WHOIS lookup failed: {error_message}"
+            }

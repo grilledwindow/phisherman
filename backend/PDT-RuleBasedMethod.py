@@ -87,7 +87,6 @@ def get_whois(domain):
             risk_level = "Low Risk" if domain_age_days >= 90 else f"High Risk, {domain} is less than 90 days old."
             return {
                 "domain": domain,
-                "creation_date": creation_date,
                 "domain_age_days": domain_age_days,
                 "risk_level": risk_level
             }
