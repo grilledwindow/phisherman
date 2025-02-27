@@ -2,6 +2,7 @@
 
 ## Setup
 Reuirements:
+- NodeJS (v22)
 - Python3
 - Chromium-based browser
 
@@ -25,6 +26,7 @@ Since the page needs to be refreshed every time the extension is updated, an off
 The extension is built using SolidJS and TailwindCSS (yay!).
 SolidJS provides an efficient way to implement fine-grained reactive components and TailwindCSS makes it easy to style elements.
 
+#### Build extension
 1. `cd extension`
 2. Install dependencies: `npm i`
 3. Build extension: `npm run build`
