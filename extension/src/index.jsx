@@ -55,6 +55,13 @@ const poll = setInterval(() => {
             setPos('height', event.target.offsetHeight);
             setPopupText(event.target.href);
             setIsLink(true);
+
+            fetch('http://localhost:5000/query_url', {
+                method: 'POST',
+                body: JSON.stringify({ URL: target.href })
+            })
+                .then(data => data.json())
+                .then(console.log);
         });
     });
 }, 500);
