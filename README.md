@@ -22,17 +22,17 @@ Since the page needs to be refreshed every time the extension is updated, an off
 5. Run app: `flask run`
 
 ### Extension
-#### TailwindCSS
-The standalone CLI is used because we're not using the npm ecosystem yet.
-1. Get the latest release [here](https://github.com/tailwindlabs/tailwindcss/releases/tag/v4.0.6)
-2. Move it to the `extension` foldee and rename to `tw`
-3. Grant executable permission: `chmod +x tw`
-4. Compile and watch for changes: `./tw -w -o style.css`
+The extension is built using SolidJS and TailwindCSS (yay!).
+SolidJS provides an efficient way to implement fine-grained reactive components and TailwindCSS makes it easy to style elements.
+
+1. `cd extension`
+2. Install dependencies: `npm i`
+3. Build extension: `npm run build`
 
 #### Extension Installation
 Currently, the extension only works on Chrome/Chromium browsers, tested on Brave.
 1. In the browser, go to `brave://extensions`
 2. Enable developer mode
-3. Load unpacked -> select `extension` folder
+3. Load unpacked -> select `extension/unpacked` folder
 
 If the extension needs to run on URLs that are undetected, you may add a new rule in `extension/manifest.json`, in the `matches` array.
