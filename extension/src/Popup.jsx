@@ -4,6 +4,7 @@ function Popup(props) {
     const pos = props.pos;
     const link = props.link;
     const isLink = props.isLink;
+    const isPhish = props.isPhish;
     const id = props.id;
     const onCancel = props.onCancel;
 
@@ -23,16 +24,19 @@ function Popup(props) {
                 left: pos.left + 20 + 'px',
                 'max-width': window.innerWidth - pos.left - 50 + 'px',
             }}
-            className="p-2 bg-[#F2F0E4] h-fit rounded-xl break-all shadow-xl"
+            className="h-fit bg-[#e9e3d3] border-2 border-[#777] rounded-xl overflow-hidden break-all drop-shadow-2xl shadow-lg"
         >
-            <p>{link()}</p>
-            <div className="mt-4 mb-2 flex w-full space-x-2 justify-end">
+            <p className="p-2 block "
+                class={isPhish() ? "bg-[#DD8888]" : "bg-[#88DD88]"}
+            >{link()}</p>
+            <div className="flex w-full border-t-2 border-[#777] justify-end">
                 <button
                     on:click={onCancel}
-                    className="py-1 px-3 rounded-full hover:cursor-pointer">Cancel</button>
+                    className="py-2 px-3 border-x-2 border-[#777] hover:cursor-pointer">Cancel</button>
                 <button
                     on:click={() => window.open(link(), '_blank')}
-                    className="py-1 px-3 bg-[#DD8888] rounded-full hover:cursor-pointer"
+                    className="py-2 px-3 hover:cursor-pointer"
+                    class={isPhish() ? "bg-[#DD8888]" : "bg-[#88DD88]"}
                 >
                     Open
                 </button>
