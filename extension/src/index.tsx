@@ -2,10 +2,9 @@
 import { render } from 'solid-js/web';
 import { createStore } from 'solid-js/store';
 import { createSignal, createEffect } from 'solid-js';
-import type { PopupStore } from './Popup';
-import Popup  from './Popup';
 import Tracer from './Tracer';
 import './style.css';
+import PopupHint, { PopupStore } from './PopupHint';
 
 let body: HTMLElement | null;
 let targets: { [key: string]: string } = {};
@@ -31,7 +30,7 @@ const poll = setInterval(() => {
     // this is because of the event listener attached to <body> determining that <p> isn't a Popup
     const html: HTMLHtmlElement | any = document.querySelector('html');
     render(() => <Tracer id={tracerId} store={popupStore} />, html);
-    render(() => <Popup id={popupId} store={popupStore} />, html);
+    render(() => <PopupHint id={popupId} store={popupStore} />, html);
 
     body.addEventListener('mouseover', (event: MouseEvent) => {
         let target = event.target as HTMLElement;
