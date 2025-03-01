@@ -68,8 +68,10 @@ const poll = setInterval(() => {
                 method: 'POST',
                 body: JSON.stringify({ URL: target.href })
             })
-                .then(data => data.json())
-                .then(console.log);
+                .then(res => res.json())
+                .then(data => {
+                    setPopupStore('isPhish', data.is_phishing_link);
+                });
         });
     });
 }, 500);
