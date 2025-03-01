@@ -17,6 +17,6 @@ export default defineConfig({
             assetFileNames: (assetInfo) => '[name][extname]'        }
     },
     outDir: 'unpacked/assets/',
-    target: 'modules',
+    target: 'esnext',
   },
 });
