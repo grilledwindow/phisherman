@@ -1,1 +1,14 @@
 @import 'tailwindcss';
+
+@font-face {
+    font-family: Iosevka, monospace;
+    src: url('/static/Iosevka-Regular.ttf');
+}
+@theme {
+    --color-green: #AFCF91;
+    --color-red: #CE9790;
+}
+
+.font-link {
+    @apply font-[Iosevka] text-[1.05rem];
+}
