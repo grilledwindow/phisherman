@@ -2,19 +2,23 @@
 import { render } from 'solid-js/web';
 import { createStore } from 'solid-js/store';
 import { createSignal, createEffect } from 'solid-js';
-import Popup from './Popup';
+import type { PopupStore } from './Popup';
+import Popup  from './Popup';
 import Tracer from './Tracer';
 import './style.css';
 
-let body;
-let targets = {};
+let body: HTMLElement | null;
+let targets: { [key: string]: string } = {};
 
-const [pos, setPos] = createStore({ top: 0, left: 0, width: 0, height: 0 });
-const [isLink, setIsLink] = createSignal(false);
-const [isPhish, setIsPhish] = createSignal(false);
-const [targetLink, setTargetLink] = createSignal('');
 const tracerId = 'tracer';
 const popupId = 'popup';
+const [popupStore, setPopupStore] = createStore<PopupStore>({
+    pos: { top: 0, left: 0, width: 0, height: 0 },
+    link: '',
+    isPhish: false,
+    show: false,
+    onCancel: () => { setPopupStore('show', false); }
+}); 
 
 const poll = setInterval(() => {
     body = document.querySelector('div.a3s.aiL');
@@ -25,13 +29,12 @@ const poll = setInterval(() => {
     // this is actually sooo important.
     // if appended to <body> instead of <html>, the popup disappears right after hovering over its child elements, i.e. <p>
     // this is because of the event listener attached to <body> determining that <p> isn't a Popup
-    const html = document.querySelector('html');
-    const closePopup = () => setIsLink(false);
-    render(() => <Tracer id={tracerId} pos={pos} isLink={isLink} />, html);
-    render(() => <Popup id={popupId} pos={pos} isLink={isLink} isPhish={isPhish} link={targetLink} onCancel={closePopup} />, html);
+    const html: HTMLHtmlElement | any = document.querySelector('html');
+    render(() => <Tracer id={tracerId} store={popupStore} />, html);
+    render(() => <Popup id={popupId} store={popupStore} />, html);
 
-    body.addEventListener('mouseover', (event) => {
-        let target = event.target;
+    body.addEventListener('mouseover', (event: MouseEvent) => {
+        let target = event.target as HTMLElement;
         if (target.id == tracerId || target.id == popupId) {
             return;
         }
@@ -42,22 +45,25 @@ const poll = setInterval(() => {
         }
 
         if (!(target instanceof HTMLAnchorElement) || !target.hasAttribute('href')) {
-            setIsLink(false);
+            setPopupStore('show', false);
             return;
         }  else if (target.id && targets.hasOwnProperty(target.id)) {
             return;
         }
 
-        target.id = Math.ceil(Math.random() * 100000);
+        target.id = '' + Math.ceil(Math.random() * 100000);
         targets[target.id] = target.href;
-        target.addEventListener('mouseenter', (event) => {
-            const { left, top } = event.target.getBoundingClientRect();
-            setPos('left', left + window.scrollX);
-            setPos('top', top + window.scrollY);
-            setPos('width', event.target.offsetWidth);
-            setPos('height', event.target.offsetHeight);
-            setTargetLink(event.target.href);
-            setIsLink(true);
+        target.addEventListener('mouseenter', (event: MouseEvent) => {
+            const target = event.target as HTMLAnchorElement;
+            const { left, top } = target.getBoundingClientRect();
+            setPopupStore('pos', {
+                left: left + window.scrollX,
+                top: top + window.scrollY,
+                width: target.offsetWidth,
+                height: target.offsetHeight
+            });
+            setPopupStore('link', target.href);
+            setPopupStore('show', true);
 
             fetch('http://localhost:5000/query_url', {
                 method: 'POST',

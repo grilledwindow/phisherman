@@ -1,16 +1,23 @@
 import { onMount, createEffect } from 'solid-js';
 
-function Popup(props) {
-    const pos = props.pos;
-    const link = props.link;
-    const isLink = props.isLink;
-    const isPhish = props.isPhish;
-    const id = props.id;
-    const onCancel = props.onCancel;
+type Pos = { left: number, top: number, width: number, height: number };
+export type PopupStore = {
+    pos: Pos,
+    link: string,
+    show: boolean,
+    isPhish: boolean,
+    onCancel: () => void
+};
+
+export function Popup(props: { id: string, store: PopupStore }) {
+    const store = props.store;
+    const pos = store.pos;
+    const show = store.show;
+    const isPhish = store.isPhish;
 
     createEffect(() => {
-        if (isLink()) {
-            const popup = document.getElementById(id);
+        if (store.show) {
+            const popup = document.getElementById(props.id);
             console.log(popup);
         }
     });
@@ -18,7 +25,7 @@ function Popup(props) {
     return (
         <div id={props.id}
             style={{
-                display: isLink() ? 'block' : 'none',
+                display: store.show ? 'block' : 'none',
                 position: 'absolute',
                 top: pos.top + pos.height * 0.66 +'px',
                 left: pos.left + 20 + 'px',
@@ -27,16 +34,16 @@ function Popup(props) {
             className="h-fit bg-[#e9e3d3] border-2 border-[#777] rounded-xl overflow-hidden break-all drop-shadow-2xl shadow-lg"
         >
             <p className="p-2 block "
-                class={isPhish() ? "bg-[#DD8888]" : "bg-[#88DD88]"}
-            >{link()}</p>
+                class={isPhish ? "bg-[#DD8888]" : "bg-[#88DD88]"}
+            >{store.link}</p>
             <div className="flex w-full border-t-2 border-[#777] justify-end">
                 <button
-                    on:click={onCancel}
+                    on:click={store.onCancel}
                     className="py-2 px-3 border-x-2 border-[#777] hover:cursor-pointer">Cancel</button>
                 <button
-                    on:click={() => window.open(link(), '_blank')}
+                    on:click={() => window.open(store.link, '_blank')}
                     className="py-2 px-3 hover:cursor-pointer"
-                    class={isPhish() ? "bg-[#DD8888]" : "bg-[#88DD88]"}
+                    class={isPhish ? "bg-[#DD8888]" : "bg-[#88DD88]"}
                 >
                     Open
                 </button>

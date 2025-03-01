@@ -1,13 +1,14 @@
 import { createEffect } from 'solid-js';
+import { PopupStore } from './Popup';
 
-function Tracer(props) {
-    const pos = props.pos;
-    const isLink = props.isLink;
+function Tracer(props: { id: string, store: PopupStore }) {
+    const store = props.store;
+    const pos = store.pos;
 
     return (
         <div id={props.id}
             style={{
-                display: isLink() ? 'block' : 'none',
+                display: store.show ? 'block' : 'none',
                 position: 'absolute',
                 top: pos.top +'px',
                 left: pos.left + 'px',
