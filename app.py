@@ -34,7 +34,7 @@ def query_url():
                 "content": f"Tell me if this link is a phishing link and tell me concisely what made this a phishing link in detail. link: {url}",
             }
         ],
-        model="llama3.1",
+        model="deepseek-r1:14b",
         format=Output.model_json_schema(),
     )
 

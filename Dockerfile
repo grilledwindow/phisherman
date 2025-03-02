@@ -8,7 +8,7 @@ RUN cd ./Python-3.12.0/ && ./configure --enable-optimizations
 RUN cd ./Python-3.12.0/ && make -j 12
 RUN cd ./Python-3.12.0/ && make altinstall
 
-RUN ollama serve & sleep 5 && ollama pull llama3.1
+RUN ollama serve & sleep 5 && ollama pull deepseek-r1:14b
 RUN pip3.12 install ollama Flask
 
 WORKDIR /root
