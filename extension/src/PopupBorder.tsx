@@ -1,5 +1,6 @@
-import { onMount, createEffect } from 'solid-js';
+import { onMount, createEffect, createSignal, Show, createMemo } from 'solid-js';
 import { PopupStore } from './PopupHint';
+import Svg from './Svg';
 
 export function PopupBorder(props: { id: string, store: PopupStore, position?: any }) {
     const store = props.store;
@@ -10,6 +11,17 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
             const popup = document.getElementById(props.id);
             console.log(popup);
         }
+    });
+
+    const bgColour = () => store.isPhish ? 'bg-red' : 'bg-green';
+
+    // createMemo() and derived signals don't get proper updates but somehow createEffect() can...
+    const [readMore, setReadMore] = createSignal(false);
+    const [linkElem, setLinkElem] = createSignal<HTMLElement>();
+    createEffect(() => {
+        const elem = linkElem();
+        // console.log('linkelem', elem?.offsetHeight, elem?.scrollHeight)
+        setReadMore(elem.offsetHeight < elem.scrollHeight || elem.offsetWidth < elem.scrollWidth);
     });
 
     return (
@@ -23,9 +35,21 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
             }}
             className="h-fit bg-[#e5e5e5] border-2 border-[#777] text-[#444] rounded-md overflow-hidden break-all drop-shadow-2xl shadow-lg"
         >
-            <p className="p-2 block font-link"
-                class={store.isPhish ? "bg-red" : "bg-green"}
-            >{store.link}</p>
+            <div className="border-b-2 border-[#777] flex items-center">
+                <div className="p-2 w-fit border-r-2 border-[#777] fill-[#777]"
+                    class={bgColour()}
+                >
+                    <span className="inline-block w-[1.6rem]"><Svg isPhish={store.isPhish} fill="#666" /></span>
+                </div>
+                <div className="ml-2 translate-y-[5%]">
+                    { store.isPhish ? 'Phishing link detected!' : 'Link is safe :)' }
+                </div>
+            </div>
+            <div className="p-2">
+                <p className="font-link line-clamp-2" ref={setLinkElem}
+                >{store.link}</p>
+                <button style={{ display: readMore() ? 'block' : 'none' }}>Read more</button>
+            </div>
             <div className="flex w-full border-t-2 border-[#777] justify-end">
                 <button
                     on:click={store.onCancel}
@@ -33,7 +57,7 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
                 <button
                     on:click={() => window.open(store.link, '_blank')}
                     className="py-2 px-3 hover:cursor-pointer"
-                    class={store.isPhish ? "bg-red" : "bg-green"}
+                    class={bgColour()}
                 >
                     Open
                 </button>

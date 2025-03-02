@@ -1,4 +1,5 @@
 import { onMount, createEffect } from 'solid-js';
+import Svg from './Svg';
 
 type Pos = { left: number, top: number, width: number, height: number };
 export type PopupStore = {
@@ -36,9 +37,18 @@ export function PopupHint(props: { id: string, store: PopupStore, position?: any
         <div class={store.isPhish ? 'bg-red' : 'bg-green'}
             className="min-w-3"></div>
 
-        <div className="p-2">
-            <p className="block font-link mb-3 p-2 rounded-xl"
-            >{store.link}</p>
+        <div className="p-2 pb-3">
+            <div className="ml-1 mt-1 flex items-center space-x-2">
+                <span className="inline-block w-[2rem]"><Svg isPhish={store.isPhish} fill={ store.isPhish ? "var(--red)" : "var(--green)" } />
+                </span>
+                <span className="translate-y-[5%]">
+                    { store.isPhish ? 'Phishing link detected!' : 'Link is safe :)' }
+                </span>
+            </div>
+            <div className="p-2">
+                <p className="line-clamp-2 font-link mt-1 mb-3 rounded-xl"
+                >{store.link}</p>
+            </div>
             <div className="flex w-full space-x-2 justify-end">
                 <button
                     on:click={store.onCancel}

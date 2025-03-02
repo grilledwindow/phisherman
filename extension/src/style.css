@@ -4,11 +4,17 @@
     font-family: Iosevka, monospace;
     src: url('/static/Iosevka-Regular.ttf');
 }
+
+:root {
+    --green: #AFCF91;
+    --red: #CE9790;
+}
 @theme {
-    --color-green: #AFCF91;
-    --color-red: #CE9790;
+    --color-green: var(--green);
+    --color-red: var(--red);
 }
 
 .font-link {
     @apply font-[Iosevka] text-[1.05rem];
 }
+

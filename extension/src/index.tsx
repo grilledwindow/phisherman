@@ -5,6 +5,7 @@ import { createSignal, createEffect } from 'solid-js';
 import Tracer from './Tracer';
 import './style.css';
 import PopupHint, { PopupStore } from './PopupHint';
+import PopupBorder from './PopupBorder';
 
 let body: HTMLElement | null;
 let targets: { [key: string]: string } = {};
@@ -18,6 +19,7 @@ const [popupStore, setPopupStore] = createStore<PopupStore>({
     show: false,
     onCancel: () => { setPopupStore('show', false); }
 }); 
+createEffect(() => console.log(popupStore.link));
 
 const poll = setInterval(() => {
     body = document.querySelector('div.a3s.aiL');

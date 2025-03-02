@@ -1,18 +1,17 @@
 import { onMount, createEffect } from 'solid-js';
-import { PopupStore } from './PopupHint';
+
+type Pos = { left: number, top: number, width: number, height: number };
+export type PopupStore = {
+    pos: Pos,
+    link: string,
+    show: boolean,
+    isPhish: boolean,
+    onCancel: () => void
+};
 
 export function PopupOld(props: { id: string, store: PopupStore, position?: string | undefined }) {
     const store = props.store;
     const pos = store.pos;
-    const show = store.show;
-    const isPhish = store.isPhish;
-
-    createEffect(() => {
-        if (store.show) {
-            const popup = document.getElementById(props.id);
-            console.log(popup);
-        }
-    });
 
     return (
         <div id={props.id}
