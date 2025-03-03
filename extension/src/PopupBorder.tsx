@@ -1,6 +1,7 @@
 import { onMount, createEffect, createSignal, Show, createMemo } from 'solid-js';
 import { PopupStore } from './PopupHint';
 import Svg from './Svg';
+import { createStore } from 'solid-js/store';
 
 export function PopupBorder(props: { id: string, store: PopupStore, position?: any }) {
     const store = props.store;
@@ -15,13 +16,17 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
 
     const bgColour = () => store.isPhish ? 'bg-red' : 'bg-green';
 
-    // createMemo() and derived signals don't get proper updates but somehow createEffect() can...
-    const [readMore, setReadMore] = createSignal(false);
+    // signals for expanding/collapsing long links
     const [linkElem, setLinkElem] = createSignal<HTMLElement>();
+    const [linkExpanded, setLinkExpanded] = createSignal(false);
+    const [linkExpandable, setLinkExpandable] = createSignal(false);
+
+    // createMemo() and derived signals don't get proper updates but somehow createEffect() can...
     createEffect(() => {
         const elem = linkElem();
         // console.log('linkelem', elem?.offsetHeight, elem?.scrollHeight)
-        setReadMore(elem.offsetHeight < elem.scrollHeight || elem.offsetWidth < elem.scrollWidth);
+        const linkOverflow = elem.offsetHeight < elem.scrollHeight || elem.offsetWidth < elem.scrollWidth;
+        setLinkExpandable(linkOverflow);
     });
 
     return (
@@ -46,9 +51,14 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
                 </div>
             </div>
             <div className="p-2">
-                <p className="font-link line-clamp-2" ref={setLinkElem}
+                <p className="font-link" ref={setLinkElem}
+                    class={linkExpanded() ? 'line-clamp-none' : 'line-clamp-2'}
                 >{store.link}</p>
-                <button style={{ display: readMore() ? 'block' : 'none' }}>Read more</button>
+                <button
+                    style={{ display: linkExpandable() ? 'block' : 'none' }}
+                    className="mt-2 text-[#747474] hover:cursor-pointer"
+                    on:click={() => setLinkExpanded(v => !v)}
+                >{ linkExpanded() ? 'See less' : 'See more' }</button>
             </div>
             <div className="flex w-full border-t-2 border-[#777] justify-end">
                 <button

@@ -1,4 +1,4 @@
-import { onMount, createEffect } from 'solid-js';
+import { onMount, createEffect, createSignal } from 'solid-js';
 import Svg from './Svg';
 
 type Pos = { left: number, top: number, width: number, height: number };
@@ -13,14 +13,25 @@ export type PopupStore = {
 export function PopupHint(props: { id: string, store: PopupStore, position?: any }) {
     const store = props.store;
     const pos = store.pos;
-    const show = store.show;
-    const isPhish = store.isPhish;
 
     createEffect(() => {
         if (store.show) {
             const popup = document.getElementById(props.id);
             console.log(popup);
         }
+    });
+
+    // signals for expanding/collapsing long links
+    const [linkElem, setLinkElem] = createSignal<HTMLElement>();
+    const [linkExpanded, setLinkExpanded] = createSignal(false);
+    const [linkExpandable, setLinkExpandable] = createSignal(false);
+
+    // createMemo() and derived signals don't get proper updates but somehow createEffect() can...
+    createEffect(() => {
+        const elem = linkElem();
+        // console.log('linkelem', elem?.offsetHeight, elem?.scrollHeight)
+        const linkOverflow = elem.offsetHeight < elem.scrollHeight || elem.offsetWidth < elem.scrollWidth;
+        setLinkExpandable(linkOverflow);
     });
 
     return (
@@ -46,8 +57,14 @@ export function PopupHint(props: { id: string, store: PopupStore, position?: any
                 </span>
             </div>
             <div className="p-2">
-                <p className="line-clamp-2 font-link mt-1 mb-3 rounded-xl"
+                <p className="font-link mt-1" ref={setLinkElem}
+                    class={linkExpanded() ? 'line-clamp-none' : 'line-clamp-2'}
                 >{store.link}</p>
+                <button
+                    style={{ display: linkExpandable() ? 'block' : 'none' }}
+                    className="mt-2 text-[#747474] hover:cursor-pointer"
+                    on:click={() => setLinkExpanded(v => !v)}
+                >{ linkExpanded() ? 'See less' : 'See more' }</button>
             </div>
             <div className="flex w-full space-x-2 justify-end">
                 <button
