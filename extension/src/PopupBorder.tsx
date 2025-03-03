@@ -3,6 +3,7 @@ import { PopupStore } from './PopupHint';
 import Svg from './Svg';
 import { createStore } from 'solid-js/store';
 import { CheckCircle, ErrorCircle } from './svg/icons';
+import { Dynamic } from 'solid-js/web';
 
 export function PopupBorder(props: { id: string, store: PopupStore, position?: any }) {
     const store = props.store;
@@ -45,38 +46,36 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
                 left: pos.left + 20 + 'px',
                 'max-width': window.innerWidth - pos.left - 50 + 'px',
             }}
-            className="h-fit bg-[#e5e5e5] border-2 border-[#777] text-[#444] rounded-md overflow-hidden break-all drop-shadow-2xl shadow-lg"
+            class="h-fit bg-[#e5e5e5] border-2 border-[#777] text-[#444] rounded-md overflow-hidden break-all drop-shadow-2xl shadow-lg"
         >
-            <div className="border-b-2 border-[#777] flex items-center">
-                <div className="p-2 w-fit border-r-2 border-[#777] fill-[#777]"
-                    class={bgColour()}
+            <div class="border-b-2 border-[#777] flex items-center">
+                <div class={"p-2 w-fit border-r-2 border-[#777] fill-[#777] " + bgColour()}
                 >
-                    <span className="inline-block w-[1.6rem]">
+                    <span class="inline-block w-[1.6rem]">
                         <Dynamic component={getIcon().icon} fill="#666" />
                     </span>
                 </div>
-                <div className="ml-2 translate-y-[5%]">
+                <div class="ml-2 translate-y-[5%]">
                     { store.isPhish ? 'Phishing link detected!' : 'Link is safe :)' }
                 </div>
             </div>
-            <div className="p-2">
-                <p className="font-link" ref={setLinkElem}
-                    class={linkExpanded() ? 'line-clamp-none' : 'line-clamp-2'}
+            <div class="p-2">
+                <p ref={setLinkElem}
+                    class={"font-link " + (linkExpanded() ? 'line-clamp-none' : 'line-clamp-2')}
                 >{store.link}</p>
                 <button
                     style={{ display: linkExpandable() ? 'block' : 'none' }}
-                    className="mt-2 text-[#747474] hover:cursor-pointer"
+                    class="mt-2 text-[#747474] hover:cursor-pointer"
                     on:click={() => setLinkExpanded(v => !v)}
                 >{ linkExpanded() ? 'See less' : 'See more' }</button>
             </div>
-            <div className="flex w-full border-t-2 border-[#777] justify-end">
+            <div class="flex w-full border-t-2 border-[#777] justify-end">
                 <button
                     on:click={store.onCancel}
-                    className="py-2 px-3 border-x-2 border-[#777] hover:cursor-pointer">Cancel</button>
+                    class="py-2 px-3 border-x-2 border-[#777] hover:cursor-pointer">Cancel</button>
                 <button
                     on:click={() => window.open(store.link, '_blank')}
-                    className="py-2 px-3 hover:cursor-pointer"
-                    class={bgColour()}
+                    class={"py-2 px-3 hover:cursor-pointer " + bgColour()}
                 >
                     Open
                 </button>

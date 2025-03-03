@@ -50,39 +50,37 @@ export function PopupHint(props: { id: string, store: PopupStore, position?: any
                 left: pos.left + 20 + 'px',
                 'max-width': window.innerWidth - pos.left - 50 + 'px',
             }}
-            className="justify-between h-fit bg-[#e5e5e5] text-[#444] rounded-xl overflow-hidden break-all drop-shadow-2xl shadow-lg"
+            class="justify-between h-fit bg-[#e5e5e5] text-[#444] rounded-xl overflow-hidden break-all drop-shadow-2xl shadow-lg"
         >
-        <div class={store.isPhish ? 'bg-red' : 'bg-green'}
-            className="min-w-3"></div>
+        <div class={"min-w-3 " + (store.isPhish ? 'bg-red' : 'bg-green')}></div>
 
-        <div className="p-2 pb-3">
-            <div className="ml-1 mt-1 flex items-center space-x-2">
-                <span className="inline-block w-[2rem]">
+        <div class="p-2 pb-3">
+            <div class="ml-1 mt-1 flex items-center space-x-2">
+                <span class="inline-block w-[2rem]">
                     <Dynamic component={getIcon().icon} fill={getIcon().fill} />
                 </span>
-                <span className="translate-y-[5%]">
+                <span class="translate-y-[5%]">
                     { store.isPhish ? 'Phishing link detected!' : 'Link is safe :)' }
                 </span>
             </div>
-            <div className="p-2">
+            <div class="p-2">
                 {/* ref using signal because dimensions aren't propagated properly otherwise */}
-                <p className="font-link mt-1" ref={setLinkElem}
-                    class={linkExpanded() ? 'line-clamp-none' : 'line-clamp-2'}
+                <p ref={setLinkElem}
+                    class={"font-link mt-1 " + (linkExpanded() ? 'line-clamp-none' : 'line-clamp-2')}
                 >{store.link}</p>
                 <button
                     style={{ display: linkExpandable() ? 'block' : 'none' }}
-                    className="mt-2 text-[#747474] hover:cursor-pointer"
+                    class="mt-2 text-[#747474] hover:cursor-pointer"
                     on:click={() => setLinkExpanded(v => !v)}
                 >{ linkExpanded() ? 'See less' : 'See more' }</button>
             </div>
-            <div className="flex w-full space-x-2 justify-end">
+            <div class="flex w-full space-x-2 justify-end">
                 <button
                     on:click={store.onCancel}
-                    className="py-2 px-3 hover:cursor-pointer">Cancel</button>
+                    class="py-2 px-3 hover:cursor-pointer">Cancel</button>
                 <button
                     on:click={() => window.open(store.link, '_blank')}
-                    className="py-2 px-3 rounded-full hover:cursor-pointer"
-                    class={store.isPhish ? "bg-red" : "bg-green"}
+                    class={"py-2 px-3 rounded-full hover:cursor-pointer " + (store.isPhish ? "bg-red" : "bg-green")}
                 >
                     Open
                 </button>

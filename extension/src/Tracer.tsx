@@ -15,7 +15,7 @@ function Tracer(props: { id: string, store: PopupStore }) {
                 width: pos.width + 'px',
                 height: pos.height + 'px'
             }}
-            className="bg-red-700 opacity-30"
+            class="bg-red-700 opacity-30"
         ></div>
     )
 }
