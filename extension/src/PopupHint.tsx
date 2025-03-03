@@ -1,5 +1,6 @@
-import { onMount, createEffect, createSignal } from 'solid-js';
-import Svg from './Svg';
+import { onMount, createEffect, createSignal, createMemo } from 'solid-js';
+import { Dynamic } from 'solid-js/web';
+import { CheckCircle, ErrorCircle } from './svg/icons';
 
 type Pos = { left: number, top: number, width: number, height: number };
 export type PopupStore = {
@@ -19,6 +20,12 @@ export function PopupHint(props: { id: string, store: PopupStore, position?: any
             const popup = document.getElementById(props.id);
             console.log(popup);
         }
+    });
+
+    const getIcon = createMemo(() => {
+        return store.isPhish
+            ? { icon: ErrorCircle, fill: 'var(--red)' }
+            : { icon: CheckCircle, fill: 'var(--green)' };
     });
 
     // signals for expanding/collapsing long links
@@ -50,13 +57,15 @@ export function PopupHint(props: { id: string, store: PopupStore, position?: any
 
         <div className="p-2 pb-3">
             <div className="ml-1 mt-1 flex items-center space-x-2">
-                <span className="inline-block w-[2rem]"><Svg isPhish={store.isPhish} fill={ store.isPhish ? "var(--red)" : "var(--green)" } />
+                <span className="inline-block w-[2rem]">
+                    <Dynamic component={getIcon().icon} fill={getIcon().fill} />
                 </span>
                 <span className="translate-y-[5%]">
                     { store.isPhish ? 'Phishing link detected!' : 'Link is safe :)' }
                 </span>
             </div>
             <div className="p-2">
+                {/* ref using signal because dimensions aren't propagated properly otherwise */}
                 <p className="font-link mt-1" ref={setLinkElem}
                     class={linkExpanded() ? 'line-clamp-none' : 'line-clamp-2'}
                 >{store.link}</p>

@@ -2,6 +2,7 @@ import { onMount, createEffect, createSignal, Show, createMemo } from 'solid-js'
 import { PopupStore } from './PopupHint';
 import Svg from './Svg';
 import { createStore } from 'solid-js/store';
+import { CheckCircle, ErrorCircle } from './svg/icons';
 
 export function PopupBorder(props: { id: string, store: PopupStore, position?: any }) {
     const store = props.store;
@@ -12,6 +13,12 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
             const popup = document.getElementById(props.id);
             console.log(popup);
         }
+    });
+
+    const getIcon = createMemo(() => {
+        return store.isPhish
+            ? { icon: ErrorCircle, fill: '--var(red)' }
+            : { icon: CheckCircle, fill: '--var(green)' };
     });
 
     const bgColour = () => store.isPhish ? 'bg-red' : 'bg-green';
@@ -44,7 +51,9 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
                 <div className="p-2 w-fit border-r-2 border-[#777] fill-[#777]"
                     class={bgColour()}
                 >
-                    <span className="inline-block w-[1.6rem]"><Svg isPhish={store.isPhish} fill="#666" /></span>
+                    <span className="inline-block w-[1.6rem]">
+                        <Dynamic component={getIcon().icon} fill="#666" />
+                    </span>
                 </div>
                 <div className="ml-2 translate-y-[5%]">
                     { store.isPhish ? 'Phishing link detected!' : 'Link is safe :)' }
