@@ -6,9 +6,10 @@
 }
 
 :root {
-    --green: #AFCF91;
+    --green: #9CBF87;
     --red: #CE9790;
 }
+
 @theme {
     --color-green: var(--green);
     --color-red: var(--red);
