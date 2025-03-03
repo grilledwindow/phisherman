@@ -34,7 +34,9 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
         const elem = linkElem();
         // console.log('linkelem', elem?.offsetHeight, elem?.scrollHeight)
         const linkOverflow = elem.offsetHeight < elem.scrollHeight || elem.offsetWidth < elem.scrollWidth;
-        setLinkExpandable(linkOverflow);
+
+        // store.show is a required dependency for this effect to trigger
+        setLinkExpandable(store.show && linkOverflow);
     });
 
     return (

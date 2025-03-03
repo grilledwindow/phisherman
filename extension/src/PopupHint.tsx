@@ -38,7 +38,9 @@ export function PopupHint(props: { id: string, store: PopupStore, position?: any
         const elem = linkElem();
         // console.log('linkelem', elem?.offsetHeight, elem?.scrollHeight)
         const linkOverflow = elem.offsetHeight < elem.scrollHeight || elem.offsetWidth < elem.scrollWidth;
-        setLinkExpandable(linkOverflow);
+
+        // store.show is a required dependency for this effect to trigger
+        setLinkExpandable(store.show && linkOverflow);
     });
 
     return (
@@ -69,8 +71,7 @@ export function PopupHint(props: { id: string, store: PopupStore, position?: any
                     class={"font-link mt-1 " + (linkExpanded() ? 'line-clamp-none' : 'line-clamp-2')}
                 >{store.link}</p>
                 <button
-                    style={{ display: linkExpandable() ? 'block' : 'none' }}
-                    class="mt-2 text-[#747474] hover:cursor-pointer"
+                    class={(linkExpandable() ? 'block' : 'hidden') + " mt-2 text-[#747474] hover:cursor-pointer"}
                     on:click={() => setLinkExpanded(v => !v)}
                 >{ linkExpanded() ? 'See less' : 'See more' }</button>
             </div>
