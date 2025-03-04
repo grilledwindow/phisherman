@@ -21,13 +21,22 @@ const toggleIsPhish = () => {
     setSafePopupStore('isPhish', v => !v);
     setPhishPopupStore('isPhish', v => !v);
 }
+const toggleShow = () => {
+    console.log('clicked');
+    setSafePopupStore('show', v => !v);
+    setPhishPopupStore('show', v => !v);
+}
 
 const ToggleIsPhish = () => {
     return <label class="mt-4 ml-4 block">isPhish<input type="checkbox" on:click={toggleIsPhish} /></label>
 }
+const ToggleShow = () => {
+    return <label class="mt-4 ml-4 block">hide<input type="checkbox" on:click={toggleShow} /></label>
+}
 
 if (root) {
     render(() => <ToggleIsPhish />, root);
+    render(() => <ToggleShow />, root);
     render(() => <PopupBorder id='popup-border-phish' store={phishPopupStore} position='relative' />, root);
     render(() => <PopupHint id='popup-hint-phish' store={phishPopupStore} position='relative' />, root);
     render(() => <PopupBorder id='popup-border-safe' store={safePopupStore} position='relative' />, root);

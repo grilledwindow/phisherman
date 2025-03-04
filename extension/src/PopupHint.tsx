@@ -35,12 +35,12 @@ export function PopupHint(props: { id: string, store: PopupStore, position?: any
 
     // createMemo() and derived signals don't get proper updates but somehow createEffect() can...
     createEffect(() => {
+        if (!store.show || linkExpanded()) {
+            return;
+        }
         const elem = linkElem();
-        // console.log('linkelem', elem?.offsetHeight, elem?.scrollHeight)
         const linkOverflow = elem.offsetHeight < elem.scrollHeight || elem.offsetWidth < elem.scrollWidth;
-
-        // store.show is a required dependency for this effect to trigger
-        setLinkExpandable(store.show && linkOverflow);
+        setLinkExpandable(linkOverflow);
     });
 
     return (
@@ -66,14 +66,16 @@ export function PopupHint(props: { id: string, store: PopupStore, position?: any
                 </span>
             </div>
             <div class="p-2">
-                {/* ref using signal because dimensions aren't propagated properly otherwise */}
-                <p ref={setLinkElem}
-                    class={"font-link mt-1 " + (linkExpanded() ? 'line-clamp-none' : 'line-clamp-2')}
-                >{store.link}</p>
                 <button
-                    class={(linkExpandable() ? 'block' : 'hidden') + " mt-2 text-[#747474] hover:cursor-pointer"}
+                    class="mt-2 text-[#747474] hover:cursor-pointer"
+                    classList={{ 'hidden': !linkExpandable() }}
                     on:click={() => setLinkExpanded(v => !v)}
                 >{ linkExpanded() ? 'See less' : 'See more' }</button>
+                {/* ref using signal because dimensions aren't propagated properly otherwise */}
+                <p ref={setLinkElem}
+                    class="font-link mt-1"
+                    classList={{ 'line-clamp-2': !linkExpanded() }}
+                >{store.link}</p>
             </div>
             <div class="flex w-full space-x-2 justify-end">
                 <button

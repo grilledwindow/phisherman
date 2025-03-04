@@ -31,12 +31,12 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
 
     // createMemo() and derived signals don't get proper updates but somehow createEffect() can...
     createEffect(() => {
+        if (!store.show || linkExpanded()) {
+            return;
+        }
         const elem = linkElem();
-        // console.log('linkelem', elem?.offsetHeight, elem?.scrollHeight)
         const linkOverflow = elem.offsetHeight < elem.scrollHeight || elem.offsetWidth < elem.scrollWidth;
-
-        // store.show is a required dependency for this effect to trigger
-        setLinkExpandable(store.show && linkOverflow);
+        setLinkExpandable(linkOverflow);
     });
 
     return (
@@ -62,14 +62,15 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
                 </div>
             </div>
             <div class="p-2">
-                <p ref={setLinkElem}
-                    class={"font-link " + (linkExpanded() ? 'line-clamp-none' : 'line-clamp-2')}
-                >{store.link}</p>
                 <button
-                    style={{ display: linkExpandable() ? 'block' : 'none' }}
-                    class="mt-2 text-[#747474] hover:cursor-pointer"
+                    class="my-1 text-[#747474] hover:cursor-pointer"
+                    classList={{ 'hidden': !linkExpandable() }}
                     on:click={() => setLinkExpanded(v => !v)}
                 >{ linkExpanded() ? 'See less' : 'See more' }</button>
+                <p ref={setLinkElem}
+                    class="font-link"
+                    classList={{ 'line-clamp-2': !linkExpanded() }}
+                >{store.link}</p>
             </div>
             <div class="flex w-full border-t-2 border-[#777] justify-end">
                 <button
