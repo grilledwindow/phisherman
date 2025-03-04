@@ -66,7 +66,7 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
                     class="my-1 text-[#747474] hover:cursor-pointer"
                     classList={{ 'hidden': !linkExpandable() }}
                     on:click={() => setLinkExpanded(v => !v)}
-                >{ linkExpanded() ? 'See less' : 'See more' }</button>
+                >{ linkExpanded() ? 'Collapse link' : 'Expand link' }</button>
                 <p ref={setLinkElem}
                     class="font-link"
                     classList={{ 'line-clamp-2': !linkExpanded() }}

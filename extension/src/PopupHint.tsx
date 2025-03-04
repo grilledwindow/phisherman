@@ -70,7 +70,7 @@ export function PopupHint(props: { id: string, store: PopupStore, position?: any
                     class="mt-2 text-[#747474] hover:cursor-pointer"
                     classList={{ 'hidden': !linkExpandable() }}
                     on:click={() => setLinkExpanded(v => !v)}
-                >{ linkExpanded() ? 'See less' : 'See more' }</button>
+                >{ linkExpanded() ? 'Collapse link' : 'Expand link' }</button>
                 {/* ref using signal because dimensions aren't propagated properly otherwise */}
                 <p ref={setLinkElem}
                     class="font-link mt-1"
