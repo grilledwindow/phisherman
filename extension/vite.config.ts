@@ -9,14 +9,21 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-        input: {
-            main: './src/index.jsx'
-        },
+        // index.html isn't used as entry point because we don't need to render it.
+        // config.html is used as an entry point since it's rendered as the "default_popup" action.
+        // when bundling config.html, a config.js file is also created.
+        input: ['src/index.tsx', 'config.html'],
         output: {
-            entryFileNames: 'index.js',
-            assetFileNames: (assetInfo) => '[name][extname]'        }
+            entryFileNames: () => '[name].js',
+            assetFileNames: () => '[name][extname]',
+            manualChunks: (id) => {
+                // idk what this actually does, but it removes the random chunk generated that causes import errors...
+                // console.log(id);
+                return '';
+            }
+        }
     },
     outDir: 'unpacked/assets/',
-    target: 'esnext',
+    target: 'modules',
   },
 });

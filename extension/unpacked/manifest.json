@@ -6,8 +6,11 @@
     {
       "matches": ["https://mail.google.com/*", "file:///*", "http://localhost:*/gmail"],
       "js": ["./assets/index.js"],
-      "css": ["./assets/main.css"]
+      "css": ["./assets/index.css"]
     }
-  ]
+  ],
+  "action": {
+      "default_popup": "./assets/config.html"
+  }
 }
 
