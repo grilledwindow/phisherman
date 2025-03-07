@@ -16,14 +16,9 @@ export default defineConfig({
         output: {
             entryFileNames: () => '[name].js',
             assetFileNames: () => '[name][extname]',
-            manualChunks: (id) => {
-                // idk what this actually does, but it removes the random chunk generated that causes import errors...
-                // console.log(id);
-                return '';
-            }
         }
     },
-    outDir: 'unpacked/assets/',
-    target: 'modules',
+    outDir: 'unpacked/',
+    target: 'esnext',
   },
 });
