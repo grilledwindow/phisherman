@@ -5,7 +5,7 @@ import { createSignal, createEffect } from 'solid-js';
 import Tracer from './Tracer';
 import './style.css';
 import PopupHint, { PopupStore } from './PopupHint';
-import PopupBorder from './PopupBorder';
+import { createEventListener } from '@solid-primitives/event-listener';
 
 let body: HTMLElement | null;
 let targets: { [key: string]: string } = {};
@@ -34,7 +34,7 @@ const poll = setInterval(() => {
     render(() => <Tracer id={tracerId} store={popupStore} />, html);
     render(() => <PopupHint id={popupId} store={popupStore} />, html);
 
-    body.addEventListener('mouseover', (event: MouseEvent) => {
+    createEventListener(body, 'mouseover', (event: MouseEvent) => {
         let target = event.target as HTMLElement;
         if (target.id == tracerId || target.id == popupId) {
             return;
@@ -54,7 +54,7 @@ const poll = setInterval(() => {
 
         target.id = '' + Math.ceil(Math.random() * 100000);
         targets[target.id] = target.href;
-        target.addEventListener('mouseenter', (event: MouseEvent) => {
+        createEventListener(target, 'mouseenter', (event: MouseEvent) => {
             const target = event.target as HTMLAnchorElement;
             const { left, top } = target.getBoundingClientRect();
             setPopupStore('pos', {
