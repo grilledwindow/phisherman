@@ -7,7 +7,7 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp manifest.json unpacked/",
     "serve": "vite preview"
   },
   "license": "MIT",
