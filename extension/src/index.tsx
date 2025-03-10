@@ -2,9 +2,9 @@
 import { render } from 'solid-js/web';
 import { createStore } from 'solid-js/store';
 import { createSignal, createEffect } from 'solid-js';
-import Tracer from './Tracer';
+import Tracer from './dialog/Tracer';
 import './style.css';
-import PopupHint, { PopupStore } from './PopupHint';
+import DialogHint, { DialogStore } from './dialog/DialogHint';
 
 let body: HTMLElement | null;
 let targets: HTMLElement[] = [];
@@ -22,14 +22,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 const onTargetMouseenter = (event: MouseEvent) => {
     const target = event.target as HTMLAnchorElement;
     const { left, top } = target.getBoundingClientRect();
-    setPopupStore('pos', {
+    setDialogStore('pos', {
         left: left + window.scrollX,
         top: top + window.scrollY,
         width: target.offsetWidth,
         height: target.offsetHeight
     });
-    setPopupStore('link', target.href);
-    setPopupStore('show', true);
+    setDialogStore('link', target.href);
+    setDialogStore('show', true);
 
     fetch('http://localhost:5000/query_url', {
         method: 'POST',
@@ -37,7 +37,7 @@ const onTargetMouseenter = (event: MouseEvent) => {
     })
         .then(res => res.json())
         .then(data => {
-            setPopupStore('isPhish', data.is_phishing_link);
+            setDialogStore('isPhish', data.is_phishing_link);
         });
 }
 
@@ -48,7 +48,7 @@ const trackTarget = (target: EventTarget) =>
 
 const onBodyMouseover = (event: MouseEvent) => {
     let target = event.target as HTMLElement;
-    if (target.id == tracerId || target.id == popupId) {
+    if (target.id == tracerId || target.id == dialogId) {
         return;
     }
 
@@ -58,7 +58,7 @@ const onBodyMouseover = (event: MouseEvent) => {
     }
 
     if (!(target instanceof HTMLAnchorElement) || !target.hasAttribute('href')) {
-        setPopupStore('show', false);
+        setDialogStore('show', false);
         return;
     }  else if (target.id && targets.hasOwnProperty(target.id)) {
         return;
@@ -82,13 +82,13 @@ createEffect(() => {
 });
 
 const tracerId = 'tracer';
-const popupId = 'popup';
-const [popupStore, setPopupStore] = createStore<PopupStore>({
+const dialogId = 'dialog';
+const [dialogStore, setDialogStore] = createStore<DialogStore>({
     pos: { top: 0, left: 0, width: 0, height: 0 },
     link: '',
     isPhish: false,
     show: false,
-    onCancel: () => { setPopupStore('show', false); }
+    onCancel: () => { setDialogStore('show', false); }
 }); 
 
 // main
@@ -102,8 +102,8 @@ const poll = setInterval(() => {
     // if appended to <body> instead of <html>, the popup disappears right after hovering over its child elements, i.e. <p>
     // this is because of the event listener attached to <body> determining that <p> isn't a Popup
     const html: HTMLHtmlElement | any = document.querySelector('html');
-    render(() => <Tracer id={tracerId} store={popupStore} />, html);
-    render(() => <PopupHint id={popupId} store={popupStore} />, html);
+    render(() => <Tracer id={tracerId} store={dialogStore} />, html);
+    render(() => <DialogHint id={dialogId} store={dialogStore} />, html);
 
     body.addEventListener('mouseover', onBodyMouseover);
 }, 500);

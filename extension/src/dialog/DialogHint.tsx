@@ -1,9 +1,9 @@
 import { onMount, createEffect, createSignal, createMemo } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
-import { CheckCircle, ErrorCircle } from './svg/icons';
+import { CheckCircle, ErrorCircle } from '../svg/icons';
 
 type Pos = { left: number, top: number, width: number, height: number };
-export type PopupStore = {
+export type DialogStore = {
     pos: Pos,
     link: string,
     show: boolean,
@@ -11,7 +11,7 @@ export type PopupStore = {
     onCancel: () => void
 };
 
-export function PopupHint(props: { id: string, store: PopupStore, position?: any }) {
+export function DialogHint(props: { id: string, store: DialogStore, position?: any }) {
     const store = props.store;
     const pos = store.pos;
 
@@ -93,5 +93,5 @@ export function PopupHint(props: { id: string, store: PopupStore, position?: any
     )
 }
 
-export default PopupHint;
+export default DialogHint;
 

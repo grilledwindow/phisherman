@@ -1,11 +1,10 @@
 import { onMount, createEffect, createSignal, Show, createMemo } from 'solid-js';
-import { PopupStore } from './PopupHint';
-import Svg from './Svg';
+import { ModalStore } from './DialogHint';
 import { createStore } from 'solid-js/store';
-import { CheckCircle, ErrorCircle } from './svg/icons';
+import { CheckCircle, ErrorCircle } from '../svg/icons';
 import { Dynamic } from 'solid-js/web';
 
-export function PopupBorder(props: { id: string, store: PopupStore, position?: any }) {
+export function DialogBorder(props: { id: string, store: ModalStore, position?: any }) {
     const store = props.store;
     const pos = store.pos;
 
@@ -87,4 +86,4 @@ export function PopupBorder(props: { id: string, store: PopupStore, position?: a
     )
 }
 
-export default PopupBorder;
+export default DialogBorder;
