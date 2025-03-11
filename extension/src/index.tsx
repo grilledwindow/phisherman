@@ -93,6 +93,7 @@ createEffect(() => {
     } else {
         body?.removeEventListener('mouseover', onBodyMouseover);
         targets.forEach(untrackTarget);
+        setDialogStore('show', false);
     }
 });
 
