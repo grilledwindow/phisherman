@@ -1,7 +1,7 @@
 import { createEffect } from 'solid-js';
-import { ModalStore } from './modal/ModalHint';
+import { DialogStore } from './DialogHint';
 
-function Tracer(props: { id: string, store: ModalStore }) {
+function Tracer(props: { id: string, store: DialogStore }) {
     const store = props.store;
     const pos = store.pos;
 

@@ -9,13 +9,10 @@
       "css": ["index.css"]
     }
   ],
-  "action": {
-      "default_popup": "config.html"
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
   },
-  "web_accessible_resources": [{
-      "resources": ["config.js"],
-      "matches": ["<all_urls>"]
-  }]
+  "action": {}
 }
-
 

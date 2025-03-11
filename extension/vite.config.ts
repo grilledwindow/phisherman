@@ -12,7 +12,7 @@ export default defineConfig({
         // index.html isn't used as entry point because we don't need to render it.
         // config.html is used as an entry point since it's rendered as the "default_popup" action.
         // when bundling config.html, a config.js file is also created.
-        input: ['src/index.tsx', 'config.html'],
+        input: ['src/index.tsx', 'src/background.ts'],
         output: {
             entryFileNames: () => '[name].js',
             assetFileNames: () => '[name][extname]',

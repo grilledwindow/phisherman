@@ -5,18 +5,33 @@ import { createSignal, createEffect } from 'solid-js';
 import Tracer from './dialog/Tracer';
 import './style.css';
 import DialogHint, { DialogStore } from './dialog/DialogHint';
+import Popup, { PopupStore } from './popup/Popup';
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'toggle-popup') {
+        setPopupStore('show', v => !v);
+    }
+});
 
 let body: HTMLElement | null;
 let targets: HTMLElement[] = [];
-const [enabled, setEnabled] = createSignal(true);
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === 'toggle-extension') {
-        setEnabled(v => {
-            console.log('extension', !v ? 'enabled' : 'disabled');
-            return !v;
-        });
-    }
+const tracerId = 'tracer';
+const dialogId = 'dialog';
+
+const [enabled, setEnabled] = createSignal(true);
+const [dialogStore, setDialogStore] = createStore<DialogStore>({
+    pos: { top: 0, left: 0, width: 0, height: 0 },
+    link: '',
+    isPhish: false,
+    show: false,
+    onCancel: () => { setDialogStore('show', false); }
+}); 
+
+const [popupStore, setPopupStore] = createStore<PopupStore>({
+    show: false,
+    onCancel: () => setPopupStore('show', false),
+    onToggleExtension: (checked) => setEnabled(checked) // triggers only if new value different
 });
 
 const onTargetMouseenter = (event: MouseEvent) => {
@@ -81,16 +96,6 @@ createEffect(() => {
     }
 });
 
-const tracerId = 'tracer';
-const dialogId = 'dialog';
-const [dialogStore, setDialogStore] = createStore<DialogStore>({
-    pos: { top: 0, left: 0, width: 0, height: 0 },
-    link: '',
-    isPhish: false,
-    show: false,
-    onCancel: () => { setDialogStore('show', false); }
-}); 
-
 // main
 const poll = setInterval(() => {
     body = document.querySelector('div.a3s.aiL');
@@ -104,6 +109,7 @@ const poll = setInterval(() => {
     const html: HTMLHtmlElement | any = document.querySelector('html');
     render(() => <Tracer id={tracerId} store={dialogStore} />, html);
     render(() => <DialogHint id={dialogId} store={dialogStore} />, html);
+    render(() => <Popup store={popupStore} />, html);
 
     body.addEventListener('mouseover', onBodyMouseover);
 }, 500);
