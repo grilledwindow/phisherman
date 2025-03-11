@@ -29,6 +29,7 @@ const [dialogStore, setDialogStore] = createStore<DialogStore>({
 }); 
 
 const [popupStore, setPopupStore] = createStore<PopupStore>({
+    enabled: () => enabled(),
     show: false,
     onCancel: () => setPopupStore('show', false),
     onToggleExtension: (checked) => setEnabled(checked) // triggers only if new value different

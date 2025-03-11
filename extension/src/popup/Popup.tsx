@@ -1,5 +1,9 @@
+import { Show } from "solid-js";
+import { WarningCone } from "../svg/icons";
+
 export type PopupStore = {
     show: boolean,
+    enabled: () => boolean,
     onCancel: () => void,
     onToggleExtension: (checked: boolean) => void
 };
@@ -20,15 +24,24 @@ export function Popup(props: { store: PopupStore }) {
             <h1 class="text-xl font-semibold">Phisherman</h1>
             <div class="mt-2">
                 <input type="checkbox" name="Toggle extension" id="toggle-extension"
-                    checked={store.show}
+                    checked={store.enabled()}
                     class="h-3 w-3 mr-2 appearance-none outline-none rounded-full cursor-pointer ring-[1.5px] ring-[#555] checked:bg-[#555]"
                     on:change={(e) => store.onToggleExtension(e.currentTarget.checked)}
                 />
                 <label for="toggle-extension">Enable extension</label>
             </div>
-            <p class="mt-4">
-                This email is...
-            </p>
+
+            {/* email findings: warnings, errors */}
+            <Show when={store.enabled()}>
+                <div class="mt-4 flex items-end space-x-2">
+                    <span class="inline-block w-[1.6rem]">
+                        <WarningCone fill="var(--yellow)" />
+                    </span>
+                    <span>
+                        Email is very generic.
+                    </span>
+                </div>
+            </Show>
         </div>
     )
 }
