@@ -38,3 +38,10 @@ Currently, the extension only works on Chrome/Chromium browsers, tested on Brave
 3. Load unpacked -> select `extension/unpacked` folder
 
 If the extension needs to run on URLs that are undetected, you may add a new rule in `extension/manifest.json`, in the `matches` array.
+
+
+## Docker
+```bash
+docker build -t phiserman/app:v1 .
+docker run -d --name phiserman_ml_model --rm --gpus=all -p 3000:3000 --name phisherman-app phiserman/app:v1
+```
