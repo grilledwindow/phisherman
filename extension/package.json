@@ -3,18 +3,21 @@
   "version": "0.0.0",
   "description": "",
   "type": "module",
+  "source": "src/index.tsx",
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp manifest.json unpacked/",
     "serve": "vite preview"
   },
   "license": "MIT",
   "devDependencies": {
+    "@types/chrome": "^0.0.308",
     "vite": "^6.0.0",
     "vite-plugin-solid": "^2.11.1"
   },
   "dependencies": {
+    "@solid-primitives/event-listener": "^2.4.0",
     "@tailwindcss/vite": "^4.0.8",
     "solid-js": "^1.9.3",
     "tailwindcss": "^4.0.8",

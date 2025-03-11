@@ -5,9 +5,14 @@
   "content_scripts": [
     {
       "matches": ["https://mail.google.com/*", "file:///*", "http://localhost:*/gmail"],
-      "js": ["./assets/index.js"],
-      "css": ["./assets/main.css"]
+      "js": ["index.js"],
+      "css": ["index.css"]
     }
-  ]
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {}
 }
 

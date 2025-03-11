@@ -8,11 +8,13 @@
 :root {
     --green: #9CBF87;
     --red: #CE9790;
+    --yellow: #CCB876;
 }
 
 @theme {
     --color-green: var(--green);
     --color-red: var(--red);
+    --color-yellow: var(--yellow);
 }
 
 .font-link {
