@@ -6,6 +6,7 @@ import Tracer from './dialog/Tracer';
 import './style.css';
 import DialogHint, { DialogStore } from './dialog/DialogHint';
 import Popup, { PopupStore } from './popup/Popup';
+import ContextDialog from './dialog/ContextDialog';
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'toggle-popup') {
@@ -26,6 +27,14 @@ const [dialogStore, setDialogStore] = createStore<DialogStore>({
     isPhish: false,
     show: false,
     onCancel: () => { setDialogStore('show', false); }
+}); 
+
+const [contextDialogStore, setContextDialogStore] = createStore<DialogStore>({
+    pos: { top: 0, left: 0, width: 0, height: 0 },
+    link: '',
+    isPhish: false,
+    show: false,
+    onCancel: () => { setContextDialogStore('show', false); }
 }); 
 
 const [popupStore, setPopupStore] = createStore<PopupStore>({
@@ -62,10 +71,18 @@ const untrackTarget = (target: EventTarget) =>
 const trackTarget = (target: EventTarget) =>
     target.addEventListener('mouseenter', onTargetMouseenter);
 
-const onBodyMouseover = (event: MouseEvent) => {
+const contextIdContentMap: { [key: string]: string } = {
+    'highlight-1': 'Sounds unusually pressurising',
+    'highlight-2': 'Legitimate companies rarely ask for your payment information. Ensure it is through a safe channel'
+};
+const onBodyMouseover = (event: Event) => {
     let target = event.target as HTMLElement;
     if (target.id == tracerId || target.id == dialogId) {
         return;
+    }
+
+    if (!Object.keys(contextIdContentMap).includes(target.id)) {
+        setContextDialogStore('show', false);
     }
 
     // covers e.g. <a><img></a>
@@ -86,15 +103,37 @@ const onBodyMouseover = (event: MouseEvent) => {
     }
 }
 
+const onContextMouseover = (event: Event) => {
+    const target = event.target as HTMLAnchorElement;
+    const { left, top } = target.getBoundingClientRect();
+    setContextDialogStore('pos', {
+        left: left + window.scrollX,
+        top: top + window.scrollY,
+        width: target.offsetWidth,
+        height: target.offsetHeight
+    });
+    setContextDialogStore('link', contextIdContentMap[target.id]);
+    setContextDialogStore('show', true);
+}
+
 // attach/detach event listeners when extension is enabled/disabled
 createEffect(() => {
+    const contexts = document.getElementsByClassName('highlight');
     if (enabled()) {
         body?.addEventListener('mouseover', onBodyMouseover);
         targets.forEach(trackTarget);
+        [...contexts].forEach((e) => {
+            e.setAttribute('class', 'highlight bg-red bg-opacity-50')
+            e.addEventListener('mouseenter', onContextMouseover);
+        });
     } else {
         body?.removeEventListener('mouseover', onBodyMouseover);
         targets.forEach(untrackTarget);
         setDialogStore('show', false);
+        [...contexts].forEach((e) => {
+            e.setAttribute('class', 'highlight bg-none');
+            e.removeEventListener('mouseenter', onContextMouseover);
+        });
     }
 });
 
@@ -112,6 +151,7 @@ const poll = setInterval(() => {
     render(() => <Tracer id={tracerId} store={dialogStore} />, html);
     render(() => <DialogHint id={dialogId} store={dialogStore} />, html);
     render(() => <Popup store={popupStore} />, html);
+    render(() => <ContextDialog store={contextDialogStore} />, html);
 
     body.addEventListener('mouseover', onBodyMouseover);
 }, 500);
