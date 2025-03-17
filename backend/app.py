@@ -35,8 +35,8 @@ def gmail():
 
 
 @app.route("/check_url")
-def check_url(url):
-    
+def check_url():
+    url = request.args.get('url')
     scheme_score = None
     domain_score = None
     path_score = None
@@ -118,33 +118,33 @@ def query_url():
     return result
 
 
-def check_embedded_url_in_query(url):
-    # Parse the URL and extract query parameters
-    parsed_url = urllib.parse.urlparse(url)
-    query_params = urllib.parse.parse_qs(parsed_url.query)
+# def check_embedded_url_in_query(url):
+#     # Parse the URL and extract query parameters
+#     parsed_url = urllib.parse.urlparse(url)
+#     query_params = urllib.parse.parse_qs(parsed_url.query)
 
-    # Check if the 'url' parameter is present in the query
-    if "url" in query_params:
-        # Extract the embedded URL from the query parameter
-        embedded_url = query_params["url"][
-            0
-        ]  # Get the first value (assuming only one 'url' parameter)
+#     # Check if the 'url' parameter is present in the query
+#     if "url" in query_params:
+#         # Extract the embedded URL from the query parameter
+#         embedded_url = query_params["url"][
+#             0
+#         ]  # Get the first value (assuming only one 'url' parameter)
 
-        # Run checks on the embedded URL
+#         # Run checks on the embedded URL
 
-        homoglyph_result = check_homoglyph(embedded_url)
-        if homoglyph_result:
-            return homoglyph_result
+#         homoglyph_result = check_homoglyph(embedded_url)
+#         if homoglyph_result:
+#             return homoglyph_result
 
-        typosquatting_result = check_typosquat(embedded_url)
-        if typosquatting_result:
-            return typosquatting_result
+#         typosquatting_result = check_typosquat(embedded_url)
+#         if typosquatting_result:
+#             return typosquatting_result
 
-        subdomain_spoofing_result = check_subdomain_spoofed(embedded_url)
-        if subdomain_spoofing_result:
-            return subdomain_spoofing_result
+#         subdomain_spoofing_result = check_subdomain_spoofed(embedded_url)
+#         if subdomain_spoofing_result:
+#             return subdomain_spoofing_result
 
-        return f"⚠️ Unsure: {embedded_url} (Not in trusted domains)"
+#         return f"⚠️ Unsure: {embedded_url} (Not in trusted domains)"
 
 
 def is_shortened_url(url):
@@ -176,8 +176,10 @@ def check_typosquat(domain, threshold=2):
         dist = distance(domain, trusted)
         if dist <= threshold:  # Small distance means similar typo
             possible_typosquat_similarity_map[trusted] = dist
-
+    
     return possible_typosquat_similarity_map
+
+
 
 
 # check for subdomain spoofing
@@ -204,7 +206,7 @@ def check_homoglyph(url):
         for item in confusable:
             characters.append(item["character"])
 
-        return f"⚠️ homoglyph detected: {characters} in {url}"
+        return f"⚠️ homoglyph detected: {characters}"
 
 
 # //simplier algo (escapes once 1 homoglyph character is detected)
@@ -229,28 +231,17 @@ def get_whois(domain):
         # Ensure creation_date is a datetime object
         if isinstance(creation_date, datetime):
             domain_age_days = (datetime.now() - creation_date).days
-            risk_level = (
-                "Low Risk"
-                if domain_age_days >= 90
-                else f"High Risk, {domain} is less than 90 days old."
-            )
-            return {
-                "domain": domain,
-                "domain_age_days": domain_age_days,
-                "risk_level": risk_level,
-            }
+            
+            if domain_age_days < 90:
+        
+                return f"High Risk, {domain} is less than 90 days old."
+            
         else:
-            return {
-                "domain": domain,
-                "error": "Creation date is not available",
-            }
+            return {"error": f"{domain} Creation date is not available"}
 
     except Exception as e:
         error_message = str(e)
         if "No match for" in error_message:
-            return {"domain": domain, "error": "Domain does not exist."}
+            return {"error": f"{domain} does not exist."}
         else:
-            return {
-                "domain": domain,
-                "error": f"WHOIS lookup failed: {error_message}",
-            }
+            return {"error": f"WHOIS lookup failed: {error_message}"}
