@@ -35,30 +35,61 @@ def gmail():
 
 
 @app.route("/check_url")
-def check_url():
-    url = request.args.get("url")
-
-    if not url:
-        return {"error": "URL is required"}, 400
-
+def check_url(url):
+    
+    scheme_score = None
+    domain_score = None
+    path_score = None
+    reason = []
     expanded_url = expand_shortened_url(url)
 
-    extracted = tldextract.extract(url)
-    embedded_check_result = check_embedded_url_in_query(expanded_url)
-    homoglyph_results = check_homoglyph(expanded_url)
-    typosquat_results = check_typosquat(
-        f"{extracted.domain}.{extracted.suffix}"
-    )
-    spoof_results = check_subdomain_spoofed(extracted.subdomain)
-    whois_results = get_whois(expanded_url)
+    parsed_url = urllib.parse.urlparse(expanded_url)
+    
+    #scheme score
+    scheme = parsed_url.scheme
 
-    return {
-        "embedded_url": embedded_check_result,
-        "homoglyph": homoglyph_results,
-        "typosquat": typosquat_results,
-        "spoof": spoof_results,
-        "whois": whois_results,
-    }, 200
+    if scheme == "http":
+        scheme_score=0.5
+    elif scheme =="https":
+        scheme_score=0
+    else:
+        scheme_score=1
+
+
+
+    homoglyph_result = check_homoglyph(expanded_url)
+    if homoglyph_result:
+        reason.append(homoglyph_result)
+        domain_score = 1
+
+    typosquatting_result = check_typosquat(expanded_url)
+    if typosquatting_result and "Safe" in typosquatting_result:
+        domain_score = 0
+    elif typosquatting_result:
+        reason.append(typosquatting_result)
+        domain_score = 1
+
+    subdomain_spoofing_result = check_subdomain_spoofed(expanded_url)
+    if subdomain_spoofing_result:
+        reason.append(subdomain_spoofing_result)
+        domain_score = 1 
+    
+    whois_result = get_whois(expanded_url)
+    if whois_result:
+        reason.append(whois_result)
+    
+
+    # if domain_score == None:
+    #     run Reuben's ML
+
+    return{
+        "url":expanded_url,
+        "scheme_score": scheme_score,
+        "domain_score": domain_score,
+        "path_score": path_score,
+        "reason": reason
+
+    }
 
 
 @app.route("/query_url", methods=["POST"])
