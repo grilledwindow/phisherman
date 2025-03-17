@@ -19,7 +19,7 @@ Since the page needs to be refreshed every time the extension is updated, an off
 1. `cd backend`
 2. Create Python virtual environment: `python3 -m venv .venv`
 3. Activate venv: run required [command](https://docs.python.org/3/library/venv.html#how-venvs-work)
-4. Install packages: `.venv/bin/pip install -r requirements.txt`
+4. Install packages: `.venv/bin/pip install -r requirements.txt` or `.venv\Scripts\pip install -r requirements.txt`
 5. Run app: `flask run`
 
 ### Extension
