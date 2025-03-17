@@ -109,7 +109,7 @@ def is_typosquatted(url, threshold=2):
 
     #check if in trusted domain list
     if domain in domains.trusted_domains:
-        return  "Safe: {url}"
+        return  "Safe"
 
     # Adjust threshold for trusted domains
     if any(trusted in domain for trusted in domains.trusted_domains):
@@ -146,33 +146,33 @@ def has_homoglyph(url):
         for item in confusable:
             characters.append(item['character'])
 
-        return f"⚠️ homoglyph detected: {characters} in {url}"
+        return f"⚠️ homoglyph detected: {characters}"
     
 
-def check_embedded_url_in_query(url):
-    # Parse the URL and extract query parameters
-    parsed_url = urllib.parse.urlparse(url)
-    query_params = urllib.parse.parse_qs(parsed_url.query)
+# def check_embedded_url_in_query(url):
+#     # Parse the URL and extract query parameters
+#     parsed_url = urllib.parse.urlparse(url)
+#     query_params = urllib.parse.parse_qs(parsed_url.query)
     
-    # Check if the 'url' parameter is present in the query
-    if 'url' in query_params:
-        # Extract the embedded URL from the query parameter
-        embedded_url = query_params['url'][0]  # Get the first value (assuming only one 'url' parameter)
+#     # Check if the 'url' parameter is present in the query
+#     if 'url' in query_params:
+#         # Extract the embedded URL from the query parameter
+#         embedded_url = query_params['url'][0]  # Get the first value (assuming only one 'url' parameter)
         
-        # Run checks on the embedded URL
-        homoglyph_result = has_homoglyph(embedded_url)
-        if homoglyph_result:
-            return homoglyph_result
+#         # Run checks on the embedded URL
+#         homoglyph_result = has_homoglyph(embedded_url)
+#         if homoglyph_result:
+#             return homoglyph_result
         
-        typosquatting_result = is_typosquatted(embedded_url)
-        if typosquatting_result:
-            return typosquatting_result
+#         typosquatting_result = is_typosquatted(embedded_url)
+#         if typosquatting_result:
+#             return typosquatting_result
         
-        subdomain_spoofing_result = is_subdomain_spoofed(embedded_url)
-        if subdomain_spoofing_result:
-            return subdomain_spoofing_result
+#         subdomain_spoofing_result = is_subdomain_spoofed(embedded_url)
+#         if subdomain_spoofing_result:
+#             return subdomain_spoofing_result
 
-        return f"⚠️ Unsure: {embedded_url} (Not in trusted domains)"
+#         return f"⚠️ Unsure: {embedded_url} (Not in trusted domains)"
 
 
 
@@ -180,6 +180,7 @@ def check_url(url):
     scheme_score = None
     domain_score = None
     path_score = None
+    reason = []
     expanded_url = expand_shortened_url(url)
 
     parsed_url = urllib.parse.urlparse(expanded_url)
@@ -198,33 +199,32 @@ def check_url(url):
 
     homoglyph_result = has_homoglyph(expanded_url)
     if homoglyph_result:
-        reason = homoglyph_result
+        reason.append(homoglyph_result)
         domain_score = 1
-    
+
     typosquatting_result = is_typosquatted(expanded_url)
-    if typosquatting_result:
-        reason = typosquatting_result
+    if typosquatting_result and "Safe" in typosquatting_result:
+        domain_score = 0
+    elif typosquatting_result:
+        reason.append(typosquatting_result)
         domain_score = 1
-    
+
     subdomain_spoofing_result = is_subdomain_spoofed(expanded_url)
     if subdomain_spoofing_result:
-        reason = subdomain_spoofing_result
+        reason.append(subdomain_spoofing_result)
         domain_score = 1 
     
     whois_result = get_whois(expanded_url)
     if whois_result:
-        reason = whois_result
+        reason.append(whois_result)
 
     
     extracted = tldextract.extract(expanded_url)
     domain = extract_main_domain(expanded_url)
-
-
-    ##to update: able to pick up homoglpyh on domain and path
-    # domain_homoglyph_score = 1 if has_homoglyph(expanded_url) else 0
     
 
-    
+    # if domain_score == None:
+    #     run Reuben's ML
 
     return{
         "url":expanded_url,
@@ -277,6 +277,7 @@ test_urls = [
     # "https://dbs.com",                   # True (Spoofing)
     # "https://secure.paypal.com",
     # "https://www.uobgroup.com/uobgroup/newsroom/index.page",
+    "http://paypal.com",
     "http://раyраl.com",
     "https://pаypal.com",
     "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
