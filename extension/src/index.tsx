@@ -24,16 +24,16 @@ const [enabled, setEnabled] = createSignal(true);
 const [dialogStore, setDialogStore] = createStore<DialogStore>({
     pos: { top: 0, left: 0, width: 0, height: 0 },
     link: '',
-    isPhish: false,
     show: false,
+    state: 'loading',
     onCancel: () => { setDialogStore('show', false); }
 }); 
 
 const [contextDialogStore, setContextDialogStore] = createStore<DialogStore>({
     pos: { top: 0, left: 0, width: 0, height: 0 },
     link: '',
-    isPhish: false,
     show: false,
+    state: 'loading',
     onCancel: () => { setContextDialogStore('show', false); }
 }); 
 
@@ -56,7 +56,6 @@ const onTargetMouseenter = (event: MouseEvent) => {
     setDialogStore('link', target.href);
     setDialogStore('show', true);
 
-    console.log(target.href);
     fetch('http://127.0.0.1:5000/query_url', {
         method: 'POST',
         headers: {
@@ -72,7 +71,7 @@ const onTargetMouseenter = (event: MouseEvent) => {
             console.time(id);
             console.log('data', data);
             console.timeEnd(id);
-            setDialogStore('isPhish', data.is_phishing_link);
+            setDialogStore('state', data.is_phishing_link ? 'unsafe' : 'safe');
         });
 }
 
@@ -140,6 +139,7 @@ createEffect(() => {
         body?.removeEventListener('mouseover', onBodyMouseover);
         targets.forEach(untrackTarget);
         setDialogStore('show', false);
+        setDialogStore('state', 'loading');
         [...contexts].forEach((e) => {
             e.setAttribute('class', 'highlight bg-none');
             e.removeEventListener('mouseenter', onContextMouseover);
