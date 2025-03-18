@@ -47,6 +47,7 @@ const [popupStore, setPopupStore] = createStore<PopupStore>({
 const onTargetMouseenter = (event: MouseEvent) => {
     const target = event.target as HTMLAnchorElement;
     const { left, top } = target.getBoundingClientRect();
+    setDialogStore('state', 'loading');
     setDialogStore('pos', {
         left: left + window.scrollX,
         top: top + window.scrollY,
@@ -56,23 +57,26 @@ const onTargetMouseenter = (event: MouseEvent) => {
     setDialogStore('link', target.href);
     setDialogStore('show', true);
 
-    fetch('http://127.0.0.1:5000/query_url', {
-        method: 'POST',
-        headers: {
-            "Content-type": "application/json; charset=UTF-8",
-            'Access-Control-Allow-Origin': '*'
-        },
-        body: JSON.stringify({ URL: target.href })
-    })
-        // .then(console.log)
-        .then(res => res.json())
-        .then(data => {
-            const id = '' + Math.random() * 10000;
-            console.time(id);
-            console.log('data', data);
-            console.timeEnd(id);
-            setDialogStore('state', data.is_phishing_link ? 'unsafe' : 'safe');
-        });
+    setTimeout(() => {
+        setDialogStore('state', target.className.includes('unsafe') ? 'unsafe' : 'safe');
+    }, 1000);
+    // fetch('http://127.0.0.1:5000/query_url', {
+    //     method: 'POST',
+    //     headers: {
+    //         "Content-type": "application/json; charset=UTF-8",
+    //         'Access-Control-Allow-Origin': '*'
+    //     },
+    //     body: JSON.stringify({ URL: target.href })
+    // })
+    //     // .then(console.log)
+    //     .then(res => res.json())
+    //     .then(data => {
+    //         const id = '' + Math.random() * 10000;
+    //         console.time(id);
+    //         console.log('data', data);
+    //         console.timeEnd(id);
+    //         setDialogStore('state', data.is_phishing_link ? 'unsafe' : 'safe');
+    //     });
 }
 
 const untrackTarget = (target: EventTarget) =>
@@ -139,7 +143,6 @@ createEffect(() => {
         body?.removeEventListener('mouseover', onBodyMouseover);
         targets.forEach(untrackTarget);
         setDialogStore('show', false);
-        setDialogStore('state', 'loading');
         [...contexts].forEach((e) => {
             e.setAttribute('class', 'highlight bg-none');
             e.removeEventListener('mouseenter', onContextMouseover);
