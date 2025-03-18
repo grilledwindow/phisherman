@@ -63,7 +63,7 @@ def check_url():
         domain_score = 1
 
     typosquatting_result = check_typosquat(expanded_url)
-    if typosquatting_result and "Safe" in typosquatting_result:
+    if typosquatting_result and typosquatting_result == "Safe":
         domain_score = 0
     elif typosquatting_result:
         reason.append(typosquatting_result)
@@ -168,8 +168,18 @@ def expand_shortened_url(short_url):
     except requests.exceptions.RequestException:
         return short_url  # returns original url if fails
 
+def extract_main_domain(url):
+    extracted = tldextract.extract(url)
+    return f"{extracted.domain}.{extracted.suffix}"
 
-def check_typosquat(domain, threshold=2):
+
+def check_typosquat(url, threshold=2):
+    
+    domain = extract_main_domain(url)
+
+    if domain in domains.trusted_domains:
+        return "Safe"
+    
     possible_typosquat_similarity_map = dict()
 
     for trusted in domains.trusted_domains:
@@ -184,11 +194,14 @@ def check_typosquat(domain, threshold=2):
 
 # check for subdomain spoofing
 def check_subdomain_spoofed(subdomain):
+    
+    normalised_subdomain = subdomain.lstrip('www.')
+    
     possible_spoofed_subdomains = []
 
     for trusted in domains.trusted_domains:
         trusted_base = trusted.split(".")[0]
-        if trusted_base in subdomain.split("."):
+        if trusted_base in normalised_subdomain.split("."):
             possible_spoofed_subdomains.append(trusted_base)
 
     return possible_spoofed_subdomains

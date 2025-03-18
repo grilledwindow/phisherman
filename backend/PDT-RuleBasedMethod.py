@@ -277,7 +277,7 @@ test_urls = [
     # "https://dbs.com",                   # True (Spoofing)
     # "https://secure.paypal.com",
     # "https://www.uobgroup.com/uobgroup/newsroom/index.page",
-    "http://paypal.com",
+    "http://www.paypal.com",
     "http://раyраl.com",
     "https://pаypal.com",
     "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
