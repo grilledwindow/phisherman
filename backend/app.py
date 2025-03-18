@@ -71,7 +71,7 @@ def check_url():
 
     subdomain_spoofing_result = check_subdomain_spoofed(expanded_url)
     if subdomain_spoofing_result:
-        reason.append(subdomain_spoofing_result)
+        reason.append(f'subdomain spoof:{subdomain_spoofing_result}')
         domain_score = 1 
     
     whois_result = get_whois(expanded_url)
@@ -249,14 +249,14 @@ def get_whois(domain):
             
             if domain_age_days < 90:
         
-                return f"High Risk, {domain} is less than 90 days old."
+                return f"High Risk, domain is less than 90 days old."
             
         else:
-            return {"error": f"{domain} Creation date is not available"}
+            return {"whois": f"Creation date is not available"}
 
     except Exception as e:
         error_message = str(e)
         if "No match for" in error_message:
-            return {"error": f"{domain} does not exist."}
+            return {"whois": f"domain does not exist."}
         else:
-            return {"error": f"WHOIS lookup failed: {error_message}"}
+            return {"whois": f"WHOIS lookup failed: {error_message}"}
