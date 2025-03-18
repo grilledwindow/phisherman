@@ -80,8 +80,19 @@ def check_url():
     
 
     # if domain_score == None:
-    #     run Reuben's ML
+    #  TODO Reuben pls insert ML code here
 
+    # else:
+    # 
+    # return{
+    #     "url":expanded_url,
+    #     "scheme_score": scheme_score,
+    #     "domain_score": domain_score,
+    #     "path_score": path_score,
+    #     "reason": reason
+    # }
+    
+    
     return{
         "url":expanded_url,
         "scheme_score": scheme_score,
@@ -90,6 +101,8 @@ def check_url():
         "reason": reason
 
     }
+
+    
 
 
 @app.route("/query_url", methods=["POST"])
