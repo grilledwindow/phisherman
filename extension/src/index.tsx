@@ -56,12 +56,22 @@ const onTargetMouseenter = (event: MouseEvent) => {
     setDialogStore('link', target.href);
     setDialogStore('show', true);
 
-    fetch('http://localhost:5000/query_url', {
+    console.log(target.href);
+    fetch('http://127.0.0.1:5000/query_url', {
         method: 'POST',
+        headers: {
+            "Content-type": "application/json; charset=UTF-8",
+            'Access-Control-Allow-Origin': '*'
+        },
         body: JSON.stringify({ URL: target.href })
     })
+        // .then(console.log)
         .then(res => res.json())
         .then(data => {
+            const id = '' + Math.random() * 10000;
+            console.time(id);
+            console.log('data', data);
+            console.timeEnd(id);
             setDialogStore('isPhish', data.is_phishing_link);
         });
 }
