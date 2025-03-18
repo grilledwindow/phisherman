@@ -193,18 +193,20 @@ def check_typosquat(url, threshold=2):
 
 
 # check for subdomain spoofing
-def check_subdomain_spoofed(subdomain):
+def check_subdomain_spoofed(url):
     
-    normalised_subdomain = subdomain.lstrip('www.')
-    
+    extracted = tldextract.extract(url) 
+    subdomain = extracted.subdomain
+
     possible_spoofed_subdomains = []
 
     for trusted in domains.trusted_domains:
         trusted_base = trusted.split(".")[0]
-        if trusted_base in normalised_subdomain.split("."):
+        if trusted_base in subdomain.split("."):
             possible_spoofed_subdomains.append(trusted_base)
 
     return possible_spoofed_subdomains
+
 
 
 def check_homoglyph(url):
