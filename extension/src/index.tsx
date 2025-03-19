@@ -59,7 +59,7 @@ const onTargetMouseenter = (event: MouseEvent) => {
 
     setTimeout(() => {
         setDialogStore('state', target.className.includes('unsafe') ? 'unsafe' : 'safe');
-    }, 1000);
+    }, 500);
     // fetch('http://127.0.0.1:5000/query_url', {
     //     method: 'POST',
     //     headers: {

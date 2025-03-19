@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { For, Show } from "solid-js";
 import { WarningCone } from "../svg/icons";
 
 export type PopupStore = {
@@ -9,6 +9,8 @@ export type PopupStore = {
 };
 export function Popup(props: { store: PopupStore }) {
     const store = props.store;
+    // hardcoded for now
+    const findings = ['Threatening language detected', 'Asking for sensitive information', 'Suspicious email'];
 
     return (
         <div 
@@ -33,13 +35,15 @@ export function Popup(props: { store: PopupStore }) {
 
             {/* email findings: warnings, errors */}
             <Show when={store.enabled()}>
-                <div class="mt-4 flex items-end space-x-2">
+                <div class="mt-2">
+                <For each={findings}>{(finding, i) =>
+                    <div class="mt-2 flex items-end space-x-2">
                     <span class="inline-block w-[1.6rem]">
-                        <WarningCone fill="var(--yellow)" />
+                    <WarningCone fill="var(--yellow)" />
                     </span>
-                    <span>
-                        Email is very generic.
-                    </span>
+                    <span>{finding}</span>
+                    </div>
+                }</For>
                 </div>
             </Show>
         </div>
