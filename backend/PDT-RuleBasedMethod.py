@@ -14,24 +14,31 @@ import json
 sys.stdout.reconfigure(encoding='utf-8')
 
 
-
-
 def is_shortened_url(url):
     """Check if a URL belongs to a known shortening service."""
     extracted = tldextract.extract(url)
-    return f"{extracted.domain}.{extracted.suffix}" in domains.shortened_domains
+    return (
+        f"{extracted.domain}.{extracted.suffix}" in domains.shortened_domains
+    )
+
 
 def expand_shortened_url(short_url):
     if not is_shortened_url(short_url):
         return short_url
+
+    headers = {"User-Agent": "Mozilla/5.0"}
     
     try:
-        headers = {"User-Agent": "Mozilla/5.0"} #
-        response = requests.head(short_url, headers=headers, allow_redirects=True, timeout=2 )
-        return response.url #return expanded url
-    except requests.exceptions.RequestException:
-        return short_url # returns original url if fails
+        # Try HEAD first
+        response = requests.head(short_url, headers=headers, allow_redirects=True, timeout=3)
+        
+        # If HEAD doesn't work properly, try GET
+        if response.status_code >= 400 or response.url == short_url:
+            response = requests.get(short_url, headers=headers, allow_redirects=True, timeout=5)
 
+        return response.url  
+    except requests.exceptions.RequestException:
+        return short_url  # Return original if failed
 
 # failed
 # def expand_and_check_redirect(url):
@@ -189,7 +196,7 @@ def check_url(url):
 
     #scheme score
     scheme = parsed_url.scheme +'://'
-    domain = extract_main_domain(url)
+    domain = extract_main_domain(expanded_url)
     path = parsed_url.path
 
     if scheme == "http://":
@@ -230,22 +237,22 @@ def check_url(url):
     # if domain_score == None:
     #     run Reuben's ML
 
-    data = [
-        {"content":expanded_url},
-        {"content": scheme , "type": "scheme", "score": scheme_score},
-        {"content": domain , "type": "domain", "score": domain_score},
-        {"content": path , "type": "path", "score": path_score},
-        {"content" :reason, "type": "reason"}
-    ]
+    # data = [
+    #     {"content":expanded_url},
+    #     {"content": scheme , "type": "scheme", "score": scheme_score},
+    #     {"content": domain , "type": "domain", "score": domain_score},
+    #     {"content": path , "type": "path", "score": path_score},
+    #     {"content" :reason, "type": "reason"}
+    # ]
     
-    #convert to JavaScript formatting
-    js_output = "const data = " + json.dumps(data, indent=4) + ";"
+    # #convert to JavaScript formatting
+    # js_output = "const data = " + json.dumps(data, indent=4) + ";"
 
-    return js_output 
+    # return js_output 
 
-    embedded_check_result = check_embedded_url_in_query(expanded_url)
-    if embedded_check_result:
-        return embedded_check_result
+    # embedded_check_result = check_embedded_url_in_query(expanded_url)
+    # if embedded_check_result:
+    #     return embedded_check_result
 
     homoglyph_result = has_homoglyph(expanded_url)
     if homoglyph_result:
@@ -286,16 +293,16 @@ test_urls = [
     # "https://secure.paypal.com",
     # "https://www.uobgroup.com/uobgroup/newsroom/index.page",
     "http://www.paypal.com",
-    "http://раyраl.com"
-    # "https://pаypal.com",
-    # "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
-    # "https://shorturl.at/xXfIb",
-    # "https://www.posb.com.sg/redirect?url=https://www.googl3.com", 
-    # "https://shorturl.at/ZAaws",         #typosquat + shortened
-    # "https://tinyurl.com/fake-google",
-    # "https://example.com/login?redirect_url=https://phishing-site.com",
-    # "https://example.com/?action=redirect&next=https://fake-site.com",
-    # "https://paypalknkkn.com"
+    "http://раyраl.com",
+    "https://pаypal.com",
+    "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
+    "https://shorturl.at/xXfIb",
+    "https://www.posb.com.sg/redirect?url=https://www.googl3.com", 
+    "https://shorturl.at/ZAaws",         #typosquat + shortened
+    "https://tinyurl.com/fake-google",
+    "https://example.com/login?redirect_url=https://phishing-site.com",
+    "https://example.com/?action=redirect&next=https://fake-site.com",
+    "https://paypalknkkn.com"
 
 ]
 
@@ -303,6 +310,7 @@ test_urls = [
 for url in test_urls:
     print("-------")
     print(check_url(url))
+    print(expand_shortened_url(url))
     #print(check_url(url))
     
 
