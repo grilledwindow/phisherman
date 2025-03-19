@@ -8,6 +8,7 @@ import requests
 import urllib.parse
 import whois
 from datetime import datetime
+import json
 
 # Ollama
 from ollama import chat
@@ -46,11 +47,13 @@ def check_url():
     parsed_url = urllib.parse.urlparse(expanded_url)
     
     #scheme score
-    scheme = parsed_url.scheme
+    scheme = parsed_url.scheme +'://'
+    domain = extract_main_domain(url)
+    path = parsed_url.path
 
-    if scheme == "http":
+    if scheme == "http://":
         scheme_score=0.5
-    elif scheme =="https":
+    elif scheme =="https://":
         scheme_score=0
     else:
         scheme_score=1
@@ -84,23 +87,20 @@ def check_url():
 
     # else:
     # 
-    # return{
-    #     "url":expanded_url,
-    #     "scheme_score": scheme_score,
-    #     "domain_score": domain_score,
-    #     "path_score": path_score,
-    #     "reason": reason
-    # }
     
     
-    return{
-        "url":expanded_url,
-        "scheme_score": scheme_score,
-        "domain_score": domain_score,
-        "path_score": path_score,
-        "reason": reason
+    data = [
+        {"content":expanded_url},
+        {"content": scheme , "type": "scheme", "score": scheme_score},
+        {"content": domain , "type": "domain", "score": domain_score},
+        {"content": path , "type": "path", "score": path_score},
+        {"content" :reason, "type": "reason"}
+    ]
+    
+    #convert to JavaScript formatting
+    js_output = "const data = " + json.dumps(data, indent=4) + ";"
 
-    }
+    return js_output
 
     
 
