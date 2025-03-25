@@ -1,0 +1,172 @@
+const axios = require('axios'); // For HTTP requests
+const { URL } = require('url'); // URL utilities for parsing
+const tldExtract = require('tldjs'); // For extracting domain info
+const levenshtein = require('fast-levenshtein'); // Levenshtein distance
+// Removed confusable-homoglyphs as it's not available
+
+// List of trusted domains and shortened domains (you'll need to define this)
+const { trustedDomains, shortenedDomains } = require('./domains');
+
+function isShortenedUrl(url) {
+    const { domain } = tldExtract.parse(url);
+    return shortenedDomains.includes(domain);
+}
+
+async function expandShortenedUrl(shortUrl) {
+    if (!isShortenedUrl(shortUrl)) return shortUrl;
+    
+    try {
+        const response = await axios.head(shortUrl, { timeout: 3000 });
+        return response.request.res.responseUrl;  // Get the expanded URL from the response
+    } catch (error) {
+        // If HEAD request fails, try GET
+        try {
+            const response = await axios.get(shortUrl, { timeout: 5000 });
+            return response.request.res.responseUrl;
+        } catch (error) {
+            return shortUrl;  // Return original if both requests fail
+        }
+    }
+}
+
+async function getWhois(domain) {
+    try {
+        const response = await axios.get(`https://whois-api.whoisxmlapi.com/api/v1?apiKey=YOUR_API_KEY&domainName=${domain}`);
+        const creationDate = response.data.createdDate;
+        const domainAgeDays = (new Date() - new Date(creationDate)) / (1000 * 3600 * 24);
+
+        if (domainAgeDays < 90) {
+            return `High Risk, ${domain} is less than 90 days old.`;
+        }
+    } catch (error) {
+        return `WHOIS lookup failed: ${error.message}`;
+    }
+}
+
+function extractMainDomain(url) {
+  const { domain} = tldExtract.parse(url);
+  console.log(domain)
+  return domain;
+}
+
+function isTyposquatted(url, threshold = 2) {
+    const domain = extractMainDomain(url);
+
+    // Check for typosquatting
+    for (let trusted of trustedDomains) {
+        if (levenshtein.get(domain, trusted) <= threshold) {
+            return `⚠️ Possible typosquatting detected: ${url} (Did you mean ${trusted}?)`;
+        }
+    }
+    return null;
+}
+
+function isSubdomainSpoofed(url) {
+    const { subdomain } = tldExtract.parse(url);
+    for (let trusted of trustedDomains) {
+        const trustedBase = trusted.split('.')[0];
+        if (subdomain.includes(trustedBase)) {
+            return `⚠️ Possible subdomain spoofing detected: ${url} (Contains trusted name '${trustedBase}' in subdomain)`;
+        }
+    }
+    return null;
+}
+
+// Placeholder for homoglyph check (you might need an alternative library or custom check)
+function hasHomoglyph(url) {
+    // Placeholder: You can integrate homoglyph detection here or remove if not needed.
+    return null;
+}
+
+async function checkUrl(url) {
+    const expandedUrl = await expandShortenedUrl(url);
+    const parsedUrl = new URL(expandedUrl);
+    
+    const scheme = parsedUrl.protocol + "//"
+
+    // define subdomain
+    const hostname = parsedUrl.hostname;
+    const parts = hostname.split('.');
+    let subdomain = null;
+    if (parts.length > 2) {
+      subdomain = parts.slice(0, -2).join('.'); // Join all parts before the last two as the subdomain
+  }
+
+
+    const domain = extractMainDomain(expandedUrl);
+
+
+    console.log(`test - domain = ${domain}`)
+    console.log(`test - subdomain = ${subdomain}`)
+
+    let path = parsedUrl.pathname;
+
+    let fullDomain = subdomain ? subdomain + '.' + domain : domain;
+
+
+    // Scheme score
+    let schemeScore = 1;
+    if (scheme === 'http://') schemeScore = 0.5;
+    if (scheme === 'https://') schemeScore = 0;
+
+    const homoglyphResult = hasHomoglyph(expandedUrl);
+    let domainScore = null;
+    let pathScore = null
+    const reasons = [];
+    
+    if (homoglyphResult) {
+        domainScore = 1;
+        reasons.push(homoglyphResult);
+    }
+
+    const typosquattingResult = isTyposquatted(expandedUrl);
+    if (typosquattingResult) {
+        domainScore = 1;
+        reasons.push(typosquattingResult)
+    }
+
+    const subdomainSpoofingResult = isSubdomainSpoofed(expandedUrl);
+    if (subdomainSpoofingResult) {
+        domainScore = 1;
+        reasons.push(subdomainSpoofingResult);
+    }
+
+    const whoisResult = await getWhois(expandedUrl);
+    
+
+    if (whoisResult) reasons.push(whoisResult);
+
+    return [
+        {"content": scheme , type: "scheme", "score": schemeScore},
+        {"content": fullDomain , "type": "domain", "score": domainScore},
+        {"content": path , type: "path", "score": pathScore},
+        {"content" :reasons, type: "reason"}
+
+      
+      ]
+}
+
+async function runTests() {
+    const testUrls = [
+        "http://www.paypal.com",
+        "http://раyраl.com",
+        "http://www.sub.paypal.com"
+
+        // "https://paypa1.com",
+        // "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
+        // "https://shorturl.at/xXfIb",
+        // "https://www.posb.com.sg/redirect?url=https://www.googl3.com", 
+        // "https://shorturl.at/ZAaws",
+        // "https://tinyurl.com/fake-google",
+        // "https://example.com/login?redirect_url=https://phishing-site.com",
+        // "https://paypalknkkn.com"
+    ];
+
+    for (let url of testUrls) {
+        const result = await checkUrl(url);
+        console.log("-------");
+        console.log(result);
+    }
+}
+
+runTests();

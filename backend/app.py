@@ -44,7 +44,7 @@ def check_url():
     path_score = None
     reason = []
     expanded_url = expand_shortened_url(url)
-    print(f"Original URL: {url} -> Expanded URL: {expanded_url}") 
+    print(f"Original URL: {url} -> Expanded URL: {expanded_url}")    
     parsed_url = urllib.parse.urlparse(expanded_url)
     extracted = tldextract.extract(parsed_url.netloc)
 
