@@ -3,12 +3,15 @@ const { URL } = require('url'); // URL utilities for parsing
 const tldExtract = require('tldjs'); // For extracting domain info
 const levenshtein = require('fast-levenshtein'); // Levenshtein distance
 // Removed confusable-homoglyphs as it's not available
+const confusables = require('unicode-confusables')
 
 // List of trusted domains and shortened domains (you'll need to define this)
 const { trustedDomains, shortenedDomains } = require('./domains');
 
 function isShortenedUrl(url) {
     const { domain } = tldExtract.parse(url);
+    console.log(`isshortenedurl, domain: ${domain}`)
+    
     return shortenedDomains.includes(domain);
 }
 
@@ -21,10 +24,10 @@ async function expandShortenedUrl(shortUrl) {
     } catch (error) {
         // If HEAD request fails, try GET
         try {
-            const response = await axios.get(shortUrl, { timeout: 5000 });
+            const response = await axios.get(shortUrl, { timeout: 5000, maxRedirects: 5});
             return response.request.res.responseUrl;
         } catch (error) {
-            return shortUrl;  // Return original if both requests fail
+            return `request to expand url failed: ${shortUrl}`;  // Return original if both requests fail
         }
     }
 }
@@ -44,16 +47,18 @@ async function getWhois(domain) {
 }
 
 function extractMainDomain(url) {
-  const { domain} = tldExtract.parse(url);
+  const {domain} = tldExtract.parse(url);
   console.log(domain)
   return domain;
 }
 
 function isTyposquatted(url, threshold = 2) {
     const domain = extractMainDomain(url);
-
+    if (trustedDomains.includes(domain)){
+        return "Safe"
+    }
     // Check for typosquatting
-    for (let trusted of trustedDomains) {
+    for (let trusted of Object.keys(trustedDomains)) {
         if (levenshtein.get(domain, trusted) <= threshold) {
             return `⚠️ Possible typosquatting detected: ${url} (Did you mean ${trusted}?)`;
         }
@@ -75,6 +80,18 @@ function isSubdomainSpoofed(url) {
 // Placeholder for homoglyph check (you might need an alternative library or custom check)
 function hasHomoglyph(url) {
     // Placeholder: You can integrate homoglyph detection here or remove if not needed.
+    if(confusables.isConfusing(url)){
+        const homoglyphsFound = confusables.confusables(url)
+        .filter(item => item.similarTo)  // Only keep items with 'similarTo' property
+        .map(item => item.similarTo)   // Extract the 'similarTo' value
+        .filter(letter => letter !== 'rn'); // Filter out 'rn' as a fake letter for 'm'
+
+        if (homoglyphsFound > 0){
+            return `Confusable characters '${homoglyphsFound.join("', '")}'`;
+        }
+        console.log(homoglyphsFound)
+        
+    }
     return null;
 }
 
@@ -109,20 +126,22 @@ async function checkUrl(url) {
     if (scheme === 'http://') schemeScore = 0.5;
     if (scheme === 'https://') schemeScore = 0;
 
-    const homoglyphResult = hasHomoglyph(expandedUrl);
     let domainScore = null;
     let pathScore = null
     const reasons = [];
-    
+
+    const homoglyphResult = hasHomoglyph(expandedUrl);
     if (homoglyphResult) {
         domainScore = 1;
         reasons.push(homoglyphResult);
     }
 
     const typosquattingResult = isTyposquatted(expandedUrl);
-    if (typosquattingResult) {
+    if (typosquattingResult == "Safe") {
+        domainScore = 0;
+    }else if(typosquattingResult){
+        reasons.push(typosquattingResult);
         domainScore = 1;
-        reasons.push(typosquattingResult)
     }
 
     const subdomainSpoofingResult = isSubdomainSpoofed(expandedUrl);
@@ -150,7 +169,12 @@ async function runTests() {
     const testUrls = [
         "http://www.paypal.com",
         "http://раyраl.com",
-        "http://www.sub.paypal.com"
+        "http://paypаl.com",
+        "https://shorturl.at/xXfIb",
+        "https://shorturl.at/dH6kn"
+        // "http://www.sub.paypal.com",
+        // "http://www.sub-paypal.com",
+        // "http://www.paypal.secure.com"
 
         // "https://paypa1.com",
         // "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
