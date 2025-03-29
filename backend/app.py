@@ -8,6 +8,8 @@ import requests
 import urllib.parse
 import whois
 from datetime import datetime
+import json
+
 
 # Ollama
 from ollama import chat
@@ -42,21 +44,31 @@ def check_url():
     path_score = None
     reason = []
     expanded_url = expand_shortened_url(url)
-
+    print(f"Original URL: {url} -> Expanded URL: {expanded_url}")    
     parsed_url = urllib.parse.urlparse(expanded_url)
-    
-    #scheme score
-    scheme = parsed_url.scheme
+    extracted = tldextract.extract(parsed_url.netloc)
 
-    if scheme == "http":
+    #defining scheme, domain and path of url
+    scheme = parsed_url.scheme +'://'
+    
+    subdomain = extracted.subdomain
+
+    if subdomain:
+        subdomain +="."
+
+    domain = extract_main_domain(expanded_url)
+    path = parsed_url.path
+
+    #scheme scoring system
+    if scheme == "http://":
         scheme_score=0.5
-    elif scheme =="https":
+    elif scheme =="https://":
         scheme_score=0
     else:
         scheme_score=1
 
 
-
+    #domain scoring system
     homoglyph_result = check_homoglyph(expanded_url)
     if homoglyph_result:
         reason.append(homoglyph_result)
@@ -84,23 +96,20 @@ def check_url():
 
     # else:
     # 
-    # return{
-    #     "url":expanded_url,
-    #     "scheme_score": scheme_score,
-    #     "domain_score": domain_score,
-    #     "path_score": path_score,
-    #     "reason": reason
-    # }
     
     
-    return{
-        "url":expanded_url,
-        "scheme_score": scheme_score,
-        "domain_score": domain_score,
-        "path_score": path_score,
-        "reason": reason
+    data = [
+        {"content": scheme , "type": "scheme", "score": scheme_score},
+        {"content": subdomain + domain , "type": "domain", "score": domain_score},
+        {"content": path , "type": "path", "score": path_score},
+        {"content" :reason, "type": "reason"}
+        # for debugging {"expanded" :expanded_url, "isshorten": is_shortened_url(url)}
+    ]
+    
+    #convert to JavaScript formatting
+    js_output = "const data = " + json.dumps(data, indent=4) + ";"
 
-    }
+    return js_output
 
     
 
@@ -172,14 +181,22 @@ def expand_shortened_url(short_url):
     if not is_shortened_url(short_url):
         return short_url
 
+    headers = {"User-Agent": "Mozilla/5.0"}
+    
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}  #
-        response = requests.head(
-            short_url, headers=headers, allow_redirects=True, timeout=2
-        )
-        return response.url  # return expanded url
+        # Try HEAD first
+        response = requests.head(short_url, headers=headers, allow_redirects=True, timeout=3)
+        
+        # If HEAD doesn't work properly, try GET
+        if response.status_code >= 400 or response.url == short_url:
+            response = requests.get(short_url, headers=headers, allow_redirects=True, timeout=5)
+
+        return response.url  
     except requests.exceptions.RequestException:
-        return short_url  # returns original url if fails
+        return short_url
+    
+
+
 
 def extract_main_domain(url):
     extracted = tldextract.extract(url)
