@@ -6,6 +6,8 @@ import { trustedDomains, shortenedDomains } from './domains';
 
 export const a = levenshtein.get('', '')
 
+type Checked = { sus: boolean, message?: string };
+
 function isShortenedUrl(url: string) {
     const { domain } = parse(url);
     console.log(`isshortenedurl, domain: ${domain}`)
@@ -50,117 +52,93 @@ function extractMainDomain(url) {
   return domain;
 }
 
-function isTyposquatted(url, threshold = 2) {
+function checkTyposquat(url, threshold = 2): Checked | null  {
     const domain = extractMainDomain(url);
     if (trustedDomains.includes(domain)){
-        return "Safe"
+        return { sus: false }
     }
     // Check for typosquatting
     for (let trusted of Object.keys(trustedDomains)) {
         if (levenshtein.get(domain, trusted) <= threshold) {
-            return `⚠️ Possible typosquatting detected: ${url} (Did you mean ${trusted}?)`;
+            return { sus: true, message: `⚠️ Possible typosquatting detected: ${url} (Did you mean ${trusted}?)` };
         }
     }
     return null;
 }
 
-function isSubdomainSpoofed(url) {
+function checkSubdomainSpoofed(url): Checked | null {
     const { subdomain } = parse(url);
     for (let trusted of trustedDomains) {
         const trustedBase = trusted.split('.')[0];
         if (subdomain.includes(trustedBase)) {
-            return `⚠️ Possible subdomain spoofing detected: ${url} (Contains trusted name '${trustedBase}' in subdomain)`;
+            return { sus: true, message: `⚠️ Possible subdomain spoofing detected: ${url} (Contains trusted name '${trustedBase}' in subdomain)` };
         }
     }
-    return null;
+    return { sus: false };
 }
 
 // Placeholder for homoglyph check (you might need an alternative library or custom check)
-function hasHomoglyph(url) {
+function checkHomoglyph(url: string): Checked | null {
     // Placeholder: You can integrate homoglyph detection here or remove if not needed.
-    if(confusables.isConfusing(url)){
-        const homoglyphsFound = confusables.confusables(url)
+    if (!confusables.isConfusing(url)) return null;
+
+    const homoglyphsFound = confusables.confusables(url)
         .filter(item => item.similarTo)  // Only keep items with 'similarTo' property
         .map(item => item.similarTo)   // Extract the 'similarTo' value
         .filter(letter => letter !== 'rn'); // Filter out 'rn' as a fake letter for 'm'
 
-        if (homoglyphsFound > 0){
-            return `Confusable characters '${homoglyphsFound.join("', '")}'`;
-        }
+    if (homoglyphsFound > 0){
         console.log(homoglyphsFound)
-        
+        return { sus: true, message: `Confusable characters '${homoglyphsFound.join("', '")}'` };
+    } else {
+        return { sus: false };
     }
-    return null;
 }
 
-async function checkUrl(url) {
+async function checkUrl(url: string) {
     const expandedUrl = await expandShortenedUrl(url);
     const parsedUrl = new URL(expandedUrl);
     
     const scheme = parsedUrl.protocol + "//"
 
     // define subdomain
-    const hostname = parsedUrl.hostname;
-    const parts = hostname.split('.');
-    let subdomain = null;
-    if (parts.length > 2) {
-      subdomain = parts.slice(0, -2).join('.'); // Join all parts before the last two as the subdomain
-  }
+    const parts = parsedUrl.hostname.split('.');
 
-
+    // Join all parts before the last two as the subdomain
+    const subdomain = parts.length <= 2 ? null : parts.slice(0, -2).join('.');
     const domain = extractMainDomain(expandedUrl);
-
 
     console.log(`test - domain = ${domain}`)
     console.log(`test - subdomain = ${subdomain}`)
 
-    let path = parsedUrl.pathname;
-
     let fullDomain = subdomain ? subdomain + '.' + domain : domain;
-
 
     // Scheme score
     let schemeScore = 1;
     if (scheme === 'http://') schemeScore = 0.5;
-    if (scheme === 'https://') schemeScore = 0;
+    else if (scheme === 'https://') schemeScore = 0;
 
-    let domainScore = null;
-    let pathScore = null
-    const reasons = [];
+    let domainScore = 0;
+    const reasons = [
+        checkHomoglyph(expandedUrl),
+        checkTyposquat(expandedUrl),
+        checkSubdomainSpoofed(expandedUrl)
+    ].reduce<Array<string | undefined>>((reasons, checked) => {
+        if (checked !== null && checked.sus) {
+            domainScore += 1;
+            return [checked.message, ...reasons];
+        }
+        return reasons;
+    }, []);
 
-    const homoglyphResult = hasHomoglyph(expandedUrl);
-    if (homoglyphResult) {
-        domainScore = 1;
-        reasons.push(homoglyphResult);
-    }
-
-    const typosquattingResult = isTyposquatted(expandedUrl);
-    if (typosquattingResult == "Safe") {
-        domainScore = 0;
-    }else if(typosquattingResult){
-        reasons.push(typosquattingResult);
-        domainScore = 1;
-    }
-
-    const subdomainSpoofingResult = isSubdomainSpoofed(expandedUrl);
-    if (subdomainSpoofingResult) {
-        domainScore = 1;
-        reasons.push(subdomainSpoofingResult);
-    }
-
-    const whoisResult = await getWhois(expandedUrl);
-    
-
-    if (whoisResult) reasons.push(whoisResult);
+    getWhois(expandedUrl).then(result => result && reasons.push(result));
 
     return [
-        {"content": scheme , type: "scheme", "score": schemeScore},
-        {"content": fullDomain , "type": "domain", "score": domainScore},
-        {"content": path , type: "path", "score": pathScore},
-        {"content" :reasons, type: "reason"}
-
-      
-      ]
+        {"content": scheme, type: "scheme", "score": schemeScore},
+        {"content": fullDomain, "type": "domain", "score": domainScore},
+        {"content": parsedUrl.pathname, type: "path", "score": null},
+        {"content": reasons, type: "reason"}
+    ]
 }
 
 export async function runTests() {
