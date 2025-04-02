@@ -7,6 +7,8 @@ import './style.css';
 import DialogHint, { DialogStore } from './dialog/DialogHint';
 import Popup, { PopupStore } from './popup/Popup';
 import ContextDialog from './dialog/ContextDialog';
+import { runTests } from './services/index';
+runTests();
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'toggle-popup') {
@@ -133,12 +135,14 @@ const onContextMouseover = (event: Event) => {
 createEffect(() => {
     const contexts = document.getElementsByClassName('highlight');
     if (enabled()) {
-        body?.addEventListener('mouseover', onBodyMouseover);
-        targets.forEach(trackTarget);
-        [...contexts].forEach((e) => {
-            e.setAttribute('class', 'highlight bg-red bg-opacity-50')
-            e.addEventListener('mouseenter', onContextMouseover);
-        });
+        setTimeout(() => {
+            body?.addEventListener('mouseover', onBodyMouseover);
+            targets.forEach(trackTarget);
+            [...contexts].forEach((e) => {
+                e.setAttribute('class', 'highlight bg-red bg-opacity-50')
+                e.addEventListener('mouseenter', onContextMouseover);
+            });
+        }, 500);
     } else {
         body?.removeEventListener('mouseover', onBodyMouseover);
         targets.forEach(untrackTarget);
