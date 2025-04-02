@@ -87,8 +87,8 @@ function checkHomoglyph(url: string): Checked | null {
         .map(item => item.similarTo)   // Extract the 'similarTo' value
         .filter(letter => letter !== 'rn'); // Filter out 'rn' as a fake letter for 'm'
 
-    if (homoglyphsFound > 0){
-        console.log(homoglyphsFound)
+    if (homoglyphsFound.length > 0){
+        console.log(homoglyphsFound);
         return { sus: true, message: `Confusable characters '${homoglyphsFound.join("', '")}'` };
     } else {
         return { sus: false };
