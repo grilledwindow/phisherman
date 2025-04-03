@@ -7,6 +7,8 @@ import './style.css';
 import DialogHint, { DialogStore } from './dialog/DialogHint';
 import Popup, { PopupStore } from './popup/Popup';
 import ContextDialog from './dialog/ContextDialog';
+import { runTests } from './services/index';
+runTests();
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'toggle-popup') {
@@ -24,16 +26,16 @@ const [enabled, setEnabled] = createSignal(true);
 const [dialogStore, setDialogStore] = createStore<DialogStore>({
     pos: { top: 0, left: 0, width: 0, height: 0 },
     link: '',
-    isPhish: false,
     show: false,
+    state: 'loading',
     onCancel: () => { setDialogStore('show', false); }
 }); 
 
 const [contextDialogStore, setContextDialogStore] = createStore<DialogStore>({
     pos: { top: 0, left: 0, width: 0, height: 0 },
     link: '',
-    isPhish: false,
     show: false,
+    state: 'loading',
     onCancel: () => { setContextDialogStore('show', false); }
 }); 
 
@@ -47,6 +49,7 @@ const [popupStore, setPopupStore] = createStore<PopupStore>({
 const onTargetMouseenter = (event: MouseEvent) => {
     const target = event.target as HTMLAnchorElement;
     const { left, top } = target.getBoundingClientRect();
+    setDialogStore('state', 'loading');
     setDialogStore('pos', {
         left: left + window.scrollX,
         top: top + window.scrollY,
@@ -56,14 +59,26 @@ const onTargetMouseenter = (event: MouseEvent) => {
     setDialogStore('link', target.href);
     setDialogStore('show', true);
 
-    fetch('http://localhost:5000/query_url', {
-        method: 'POST',
-        body: JSON.stringify({ URL: target.href })
-    })
-        .then(res => res.json())
-        .then(data => {
-            setDialogStore('isPhish', data.is_phishing_link);
-        });
+    setTimeout(() => {
+        setDialogStore('state', target.className.includes('unsafe') ? 'unsafe' : 'safe');
+    }, 500);
+    // fetch('http://127.0.0.1:5000/query_url', {
+    //     method: 'POST',
+    //     headers: {
+    //         "Content-type": "application/json; charset=UTF-8",
+    //         'Access-Control-Allow-Origin': '*'
+    //     },
+    //     body: JSON.stringify({ URL: target.href })
+    // })
+    //     // .then(console.log)
+    //     .then(res => res.json())
+    //     .then(data => {
+    //         const id = '' + Math.random() * 10000;
+    //         console.time(id);
+    //         console.log('data', data);
+    //         console.timeEnd(id);
+    //         setDialogStore('state', data.is_phishing_link ? 'unsafe' : 'safe');
+    //     });
 }
 
 const untrackTarget = (target: EventTarget) =>
@@ -120,12 +135,14 @@ const onContextMouseover = (event: Event) => {
 createEffect(() => {
     const contexts = document.getElementsByClassName('highlight');
     if (enabled()) {
-        body?.addEventListener('mouseover', onBodyMouseover);
-        targets.forEach(trackTarget);
-        [...contexts].forEach((e) => {
-            e.setAttribute('class', 'highlight bg-red bg-opacity-50')
-            e.addEventListener('mouseenter', onContextMouseover);
-        });
+        setTimeout(() => {
+            body?.addEventListener('mouseover', onBodyMouseover);
+            targets.forEach(trackTarget);
+            [...contexts].forEach((e) => {
+                e.setAttribute('class', 'highlight bg-red bg-opacity-50')
+                e.addEventListener('mouseenter', onContextMouseover);
+            });
+        }, 500);
     } else {
         body?.removeEventListener('mouseover', onBodyMouseover);
         targets.forEach(untrackTarget);

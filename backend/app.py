@@ -8,6 +8,8 @@ import requests
 import urllib.parse
 import whois
 from datetime import datetime
+import json
+
 
 # Ollama
 from ollama import chat
@@ -36,29 +38,80 @@ def gmail():
 
 @app.route("/check_url")
 def check_url():
-    url = request.args.get("url")
-
-    if not url:
-        return {"error": "URL is required"}, 400
-
+    url = request.args.get('url')
+    scheme_score = None
+    domain_score = None
+    path_score = None
+    reason = []
     expanded_url = expand_shortened_url(url)
+    print(f"Original URL: {url} -> Expanded URL: {expanded_url}")    
+    parsed_url = urllib.parse.urlparse(expanded_url)
+    extracted = tldextract.extract(parsed_url.netloc)
 
-    extracted = tldextract.extract(url)
-    embedded_check_result = check_embedded_url_in_query(expanded_url)
-    homoglyph_results = check_homoglyph(expanded_url)
-    typosquat_results = check_typosquat(
-        f"{extracted.domain}.{extracted.suffix}"
-    )
-    spoof_results = check_subdomain_spoofed(extracted.subdomain)
-    whois_results = get_whois(expanded_url)
+    #defining scheme, domain and path of url
+    scheme = parsed_url.scheme +'://'
+    
+    subdomain = extracted.subdomain
 
-    return {
-        "embedded_url": embedded_check_result,
-        "homoglyph": homoglyph_results,
-        "typosquat": typosquat_results,
-        "spoof": spoof_results,
-        "whois": whois_results,
-    }, 200
+    if subdomain:
+        subdomain +="."
+
+    domain = extract_main_domain(expanded_url)
+    path = parsed_url.path
+
+    #scheme scoring system
+    if scheme == "http://":
+        scheme_score=0.5
+    elif scheme =="https://":
+        scheme_score=0
+    else:
+        scheme_score=1
+
+
+    #domain scoring system
+    homoglyph_result = check_homoglyph(expanded_url)
+    if homoglyph_result:
+        reason.append(homoglyph_result)
+        domain_score = 1
+
+    typosquatting_result = check_typosquat(expanded_url)
+    if typosquatting_result and typosquatting_result == "Safe":
+        domain_score = 0
+    elif typosquatting_result:
+        reason.append(typosquatting_result)
+        domain_score = 1
+
+    subdomain_spoofing_result = check_subdomain_spoofed(expanded_url)
+    if subdomain_spoofing_result:
+        reason.append(f'subdomain spoof:{subdomain_spoofing_result}')
+        domain_score = 1 
+    
+    whois_result = get_whois(expanded_url)
+    if whois_result:
+        reason.append(whois_result)
+    
+
+    # if domain_score == None:
+    #  TODO Reuben pls insert ML code here
+
+    # else:
+    # 
+    
+    
+    data = [
+        {"content": scheme , "type": "scheme", "score": scheme_score},
+        {"content": subdomain + domain , "type": "domain", "score": domain_score},
+        {"content": path , "type": "path", "score": path_score},
+        {"content" :reason, "type": "reason"}
+        # for debugging {"expanded" :expanded_url, "isshorten": is_shortened_url(url)}
+    ]
+    
+    #convert to JavaScript formatting
+    js_output = "const data = " + json.dumps(data, indent=4) + ";"
+
+    return js_output
+
+    
 
 
 @app.route("/query_url", methods=["POST"])
@@ -87,33 +140,33 @@ def query_url():
     return result
 
 
-def check_embedded_url_in_query(url):
-    # Parse the URL and extract query parameters
-    parsed_url = urllib.parse.urlparse(url)
-    query_params = urllib.parse.parse_qs(parsed_url.query)
+# def check_embedded_url_in_query(url):
+#     # Parse the URL and extract query parameters
+#     parsed_url = urllib.parse.urlparse(url)
+#     query_params = urllib.parse.parse_qs(parsed_url.query)
 
-    # Check if the 'url' parameter is present in the query
-    if "url" in query_params:
-        # Extract the embedded URL from the query parameter
-        embedded_url = query_params["url"][
-            0
-        ]  # Get the first value (assuming only one 'url' parameter)
+#     # Check if the 'url' parameter is present in the query
+#     if "url" in query_params:
+#         # Extract the embedded URL from the query parameter
+#         embedded_url = query_params["url"][
+#             0
+#         ]  # Get the first value (assuming only one 'url' parameter)
 
-        # Run checks on the embedded URL
+#         # Run checks on the embedded URL
 
-        homoglyph_result = check_homoglyph(embedded_url)
-        if homoglyph_result:
-            return homoglyph_result
+#         homoglyph_result = check_homoglyph(embedded_url)
+#         if homoglyph_result:
+#             return homoglyph_result
 
-        typosquatting_result = check_typosquat(embedded_url)
-        if typosquatting_result:
-            return typosquatting_result
+#         typosquatting_result = check_typosquat(embedded_url)
+#         if typosquatting_result:
+#             return typosquatting_result
 
-        subdomain_spoofing_result = check_subdomain_spoofed(embedded_url)
-        if subdomain_spoofing_result:
-            return subdomain_spoofing_result
+#         subdomain_spoofing_result = check_subdomain_spoofed(embedded_url)
+#         if subdomain_spoofing_result:
+#             return subdomain_spoofing_result
 
-        return f"⚠️ Unsure: {embedded_url} (Not in trusted domains)"
+#         return f"⚠️ Unsure: {embedded_url} (Not in trusted domains)"
 
 
 def is_shortened_url(url):
@@ -128,29 +181,53 @@ def expand_shortened_url(short_url):
     if not is_shortened_url(short_url):
         return short_url
 
+    headers = {"User-Agent": "Mozilla/5.0"}
+    
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}  #
-        response = requests.head(
-            short_url, headers=headers, allow_redirects=True, timeout=2
-        )
-        return response.url  # return expanded url
+        # Try HEAD first
+        response = requests.head(short_url, headers=headers, allow_redirects=True, timeout=3)
+        
+        # If HEAD doesn't work properly, try GET
+        if response.status_code >= 400 or response.url == short_url:
+            response = requests.get(short_url, headers=headers, allow_redirects=True, timeout=5)
+
+        return response.url  
     except requests.exceptions.RequestException:
-        return short_url  # returns original url if fails
+        return short_url
+    
 
 
-def check_typosquat(domain, threshold=2):
+
+def extract_main_domain(url):
+    extracted = tldextract.extract(url)
+    return f"{extracted.domain}.{extracted.suffix}"
+
+
+def check_typosquat(url, threshold=2):
+    
+    domain = extract_main_domain(url)
+
+    if domain in domains.trusted_domains:
+        return "Safe"
+    
     possible_typosquat_similarity_map = dict()
 
     for trusted in domains.trusted_domains:
         dist = distance(domain, trusted)
         if dist <= threshold:  # Small distance means similar typo
             possible_typosquat_similarity_map[trusted] = dist
-
+    
     return possible_typosquat_similarity_map
 
 
+
+
 # check for subdomain spoofing
-def check_subdomain_spoofed(subdomain):
+def check_subdomain_spoofed(url):
+    
+    extracted = tldextract.extract(url) 
+    subdomain = extracted.subdomain
+
     possible_spoofed_subdomains = []
 
     for trusted in domains.trusted_domains:
@@ -159,6 +236,7 @@ def check_subdomain_spoofed(subdomain):
             possible_spoofed_subdomains.append(trusted_base)
 
     return possible_spoofed_subdomains
+
 
 
 def check_homoglyph(url):
@@ -173,7 +251,7 @@ def check_homoglyph(url):
         for item in confusable:
             characters.append(item["character"])
 
-        return f"⚠️ homoglyph detected: {characters} in {url}"
+        return f"⚠️ homoglyph detected: {characters}"
 
 
 # //simplier algo (escapes once 1 homoglyph character is detected)
@@ -198,28 +276,17 @@ def get_whois(domain):
         # Ensure creation_date is a datetime object
         if isinstance(creation_date, datetime):
             domain_age_days = (datetime.now() - creation_date).days
-            risk_level = (
-                "Low Risk"
-                if domain_age_days >= 90
-                else f"High Risk, {domain} is less than 90 days old."
-            )
-            return {
-                "domain": domain,
-                "domain_age_days": domain_age_days,
-                "risk_level": risk_level,
-            }
+            
+            if domain_age_days < 90:
+        
+                return f"High Risk, domain is less than 90 days old."
+            
         else:
-            return {
-                "domain": domain,
-                "error": "Creation date is not available",
-            }
+            return {"whois": f"Creation date is not available"}
 
     except Exception as e:
         error_message = str(e)
         if "No match for" in error_message:
-            return {"domain": domain, "error": "Domain does not exist."}
+            return {"whois": f"domain does not exist."}
         else:
-            return {
-                "domain": domain,
-                "error": f"WHOIS lookup failed: {error_message}",
-            }
+            return {"whois": f"WHOIS lookup failed: {error_message}"}

@@ -1,4 +1,3 @@
-
 import confusable_homoglyphs.confusables
 from flask import Flask, Request, jsonify, render_template
 import tldextract
@@ -9,30 +8,37 @@ import requests
 import urllib.parse
 import whois
 from datetime import datetime
+import sys
+import json
 
-# app = Flask(__name__)
-
-# @app.route('/')
-# def index():
-#     return render_template('gmail.html')
+sys.stdout.reconfigure(encoding='utf-8')
 
 
 def is_shortened_url(url):
     """Check if a URL belongs to a known shortening service."""
     extracted = tldextract.extract(url)
-    return f"{extracted.domain}.{extracted.suffix}" in domains.shortened_domains
+    return (
+        f"{extracted.domain}.{extracted.suffix}" in domains.shortened_domains
+    )
+
 
 def expand_shortened_url(short_url):
     if not is_shortened_url(short_url):
         return short_url
+
+    headers = {"User-Agent": "Mozilla/5.0"}
     
     try:
-        headers = {"User-Agent": "Mozilla/5.0"} #
-        response = requests.head(short_url, headers=headers, allow_redirects=True, timeout=2 )
-        return response.url #return expanded url
-    except requests.exceptions.RequestException:
-        return short_url # returns original url if fails
+        # Try HEAD first
+        response = requests.head(short_url, headers=headers, allow_redirects=True, timeout=3)
+        
+        # If HEAD doesn't work properly, try GET
+        if response.status_code >= 400 or response.url == short_url:
+            response = requests.get(short_url, headers=headers, allow_redirects=True, timeout=5)
 
+        return response.url  
+    except requests.exceptions.RequestException:
+        return short_url  # Return original if failed
 
 # failed
 # def expand_and_check_redirect(url):
@@ -84,50 +90,21 @@ def get_whois(domain):
         # Ensure creation_date is a datetime object
         if isinstance(creation_date, datetime):
             domain_age_days = (datetime.now() - creation_date).days
-            risk_level = "Low Risk" if domain_age_days >= 90 else f"High Risk, {domain} is less than 90 days old."
-            return {
-                "domain": domain,
-                "domain_age_days": domain_age_days,
-                "risk_level": risk_level
-            }
+            
+            if domain_age_days < 90:
+        
+                return f"High Risk, {domain} is less than 90 days old."
+            
         else:
-            return {
-                "domain": domain,
-                "error": "Creation date is not available"
-            }
+            return {"error": f"{domain} Creation date is not available"}
 
     except Exception as e:
         error_message = str(e)
         if "No match for" in error_message:
-            return {
-                "domain": domain,
-                "error": "Domain does not exist."
-            }
+            return {"error": f"{domain} does not exist."}
         else:
-            return {
-                "domain": domain,
-                "error": f"WHOIS lookup failed: {error_message}"
-            }
+            return {"error": f"WHOIS lookup failed: {error_message}"}
 
-    # try:
-    #     domain_info = whois.whois(domain)
-    #     creation_date = domain_info.creation_date
-
-    #     if creation_date:
-    #         domain_age = (datetime.now() - creation_date).days
-            
-    #         if domain_age <90:
-    #             return "High Risk, Website is less than 90 days old."
-
-    #     return domain_age
-    
-    # except Exception as e:
-    #     error_message = str(e)
-    #     if "No match for" in error_message:
-    #         return f"Domain does not exist: {domain}."
-    #     else: 
-    #         return "WHOIS lookup failed"
-    
 
 def extract_main_domain(url):
     extracted = tldextract.extract(url)
@@ -140,7 +117,7 @@ def is_typosquatted(url, threshold=2):
 
     #check if in trusted domain list
     if domain in domains.trusted_domains:
-        return f"✅ Safe: {url}"
+        return  "Safe"
 
     # Adjust threshold for trusted domains
     if any(trusted in domain for trusted in domains.trusted_domains):
@@ -177,48 +154,105 @@ def has_homoglyph(url):
         for item in confusable:
             characters.append(item['character'])
 
-        return f"⚠️ homoglyph detected: {characters} in {url}"
+        return f"homoglyph detected: {characters}"
     
 
-def check_embedded_url_in_query(url):
-    # Parse the URL and extract query parameters
-    parsed_url = urllib.parse.urlparse(url)
-    query_params = urllib.parse.parse_qs(parsed_url.query)
+# def check_embedded_url_in_query(url):
+#     # Parse the URL and extract query parameters
+#     parsed_url = urllib.parse.urlparse(url)
+#     query_params = urllib.parse.parse_qs(parsed_url.query)
     
-    # Check if the 'url' parameter is present in the query
-    if 'url' in query_params:
-        # Extract the embedded URL from the query parameter
-        embedded_url = query_params['url'][0]  # Get the first value (assuming only one 'url' parameter)
+#     # Check if the 'url' parameter is present in the query
+#     if 'url' in query_params:
+#         # Extract the embedded URL from the query parameter
+#         embedded_url = query_params['url'][0]  # Get the first value (assuming only one 'url' parameter)
         
-        # Run checks on the embedded URL
-        homoglyph_result = has_homoglyph(embedded_url)
-        if homoglyph_result:
-            return homoglyph_result
+#         # Run checks on the embedded URL
+#         homoglyph_result = has_homoglyph(embedded_url)
+#         if homoglyph_result:
+#             return homoglyph_result
         
-        typosquatting_result = is_typosquatted(embedded_url)
-        if typosquatting_result:
-            return typosquatting_result
+#         typosquatting_result = is_typosquatted(embedded_url)
+#         if typosquatting_result:
+#             return typosquatting_result
         
-        subdomain_spoofing_result = is_subdomain_spoofed(embedded_url)
-        if subdomain_spoofing_result:
-            return subdomain_spoofing_result
+#         subdomain_spoofing_result = is_subdomain_spoofed(embedded_url)
+#         if subdomain_spoofing_result:
+#             return subdomain_spoofing_result
 
-        return f"⚠️ Unsure: {embedded_url} (Not in trusted domains)"
+#         return f"⚠️ Unsure: {embedded_url} (Not in trusted domains)"
 
 
-# @app.route('/check-url', methods=["GET", "POST"])
+
 def check_url(url):
-    # data = request.json
-    # url = data.get('url')
-
-    # if not url:
-    #     return jsonify({"Error": "URL is required"}), 400
-
+    scheme_score = None
+    domain_score = None
+    path_score = None
+    reason = []
     expanded_url = expand_shortened_url(url)
 
-    embedded_check_result = check_embedded_url_in_query(expanded_url)
-    if embedded_check_result:
-        return embedded_check_result
+    parsed_url = urllib.parse.urlparse(expanded_url)
+    
+
+    #scheme score
+    scheme = parsed_url.scheme +'://'
+    domain = extract_main_domain(expanded_url)
+    path = parsed_url.path
+
+    if scheme == "http://":
+        scheme_score=0.5
+    elif scheme =="https://":
+        scheme_score=0
+    else:
+        scheme_score=1
+
+
+
+    homoglyph_result = has_homoglyph(expanded_url)
+    if homoglyph_result:
+        reason.append(homoglyph_result)
+        domain_score = 1
+
+    typosquatting_result = is_typosquatted(expanded_url)
+    if typosquatting_result and "Safe" in typosquatting_result:
+        domain_score = 0
+    elif typosquatting_result:
+        reason.append(typosquatting_result)
+        domain_score = 1
+
+    subdomain_spoofing_result = is_subdomain_spoofed(expanded_url)
+    if subdomain_spoofing_result:
+        reason.append(subdomain_spoofing_result)
+        domain_score = 1 
+    
+    whois_result = get_whois(expanded_url)
+    if whois_result:
+        reason.append(whois_result)
+
+    
+    extracted = tldextract.extract(expanded_url)
+    domain = extract_main_domain(expanded_url)
+    
+
+    # if domain_score == None:
+    #     run Reuben's ML
+
+    # data = [
+    #     {"content":expanded_url},
+    #     {"content": scheme , "type": "scheme", "score": scheme_score},
+    #     {"content": domain , "type": "domain", "score": domain_score},
+    #     {"content": path , "type": "path", "score": path_score},
+    #     {"content" :reason, "type": "reason"}
+    # ]
+    
+    # #convert to JavaScript formatting
+    # js_output = "const data = " + json.dumps(data, indent=4) + ";"
+
+    # return js_output 
+
+    # embedded_check_result = check_embedded_url_in_query(expanded_url)
+    # if embedded_check_result:
+    #     return embedded_check_result
 
     homoglyph_result = has_homoglyph(expanded_url)
     if homoglyph_result:
@@ -258,12 +292,19 @@ test_urls = [
     # "https://dbs.com",                   # True (Spoofing)
     # "https://secure.paypal.com",
     # "https://www.uobgroup.com/uobgroup/newsroom/index.page",
+<<<<<<< HEAD
      "https://раyраl.com",
      "https://pаypal.com",
      "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
+=======
+    "http://www.paypal.com",
+    "http://раyраl.com",
+    "https://pаypal.com",
+    "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
+>>>>>>> edee9845a522a887fcc093aba36fd6408544e7c5
     "https://shorturl.at/xXfIb",
     "https://www.posb.com.sg/redirect?url=https://www.googl3.com", 
-    "https://shorturl.at/ZAaws",             #typosquat + shortened
+    "https://shorturl.at/ZAaws",         #typosquat + shortened
     "https://tinyurl.com/fake-google",
     "https://example.com/login?redirect_url=https://phishing-site.com",
     "https://example.com/?action=redirect&next=https://fake-site.com",
@@ -276,7 +317,8 @@ test_urls = [
 for url in test_urls:
     print("-------")
     print(check_url(url))
-    # print(check_url(url))
+    print(expand_shortened_url(url))
+    #print(check_url(url))
     
 
 
