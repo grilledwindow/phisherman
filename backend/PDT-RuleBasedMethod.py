@@ -247,27 +247,28 @@ def check_url(url):
 
 test_urls = [
 
-    "https://secure-paypall.com/login",  # Typosquatting
-    "https://paypal.com",                # Safe
-    "https://faceboook.com",             # Typosquatting
-    "https://google-secure.com",         #          
-    "https://google.login.com",          # domain spoofing
-    "https://login.paypal.com",          # Safe
-    "https://paypal.scammer.com",        # domain spoofing
-    "https://secure-paypal.com",         #
-    "https://dbs.com",                   # True (Spoofing)
-    "https://secure.paypal.com",
-    "https://www.uobgroup.com/uobgroup/newsroom/index.page",
-    "https://раyраl.com",
-    "https://pаypal.com",
-    "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
+    # "https://secure-paypall.com/login",  # Typosquatting
+    # "https://paypal.com",                # Safe
+    # "https://faceboook.com",             # Typosquatting
+    # "https://google-secure.com",         #          
+    # "https://google.login.com",          # domain spoofing
+    # "https://login.paypal.com",          # Safe
+    # "https://paypal.scammer.com",        # domain spoofing
+    # "https://secure-paypal.com",         #
+    # "https://dbs.com",                   # True (Spoofing)
+    # "https://secure.paypal.com",
+    # "https://www.uobgroup.com/uobgroup/newsroom/index.page",
+     "https://раyраl.com",
+     "https://pаypal.com",
+     "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
     "https://shorturl.at/xXfIb",
     "https://www.posb.com.sg/redirect?url=https://www.googl3.com", 
     "https://shorturl.at/ZAaws",             #typosquat + shortened
     "https://tinyurl.com/fake-google",
     "https://example.com/login?redirect_url=https://phishing-site.com",
     "https://example.com/?action=redirect&next=https://fake-site.com",
-    "https://paypalknkkn.com"
+    "https://paypalknkkn.com",
+    "https://docs.google.com/document/u/0/"
 
 ]
 
