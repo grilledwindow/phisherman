@@ -3,6 +3,7 @@ import levenshtein from 'fast-levenshtein';
 import confusables from 'unicode-confusables'; //might not need
 import axios from 'axios';
 import { trustedDomains, shortenedDomains } from './domains';
+import {tall} from 'tall'
 const whois = require("whois-json");
 
 //mission: debug url expander
@@ -24,21 +25,46 @@ async function expandShortenedUrl(shortUrl: string) { //exxxxxxx
     if (!isShortenedUrl(shortUrl)) return shortUrl;
 
 
+    console.log("before try")
     try {
-        const response = await axios.head(shortUrl, { timeout: 300000 });
-        return response.request.res.responseUrl;  // Get the expanded URL from the response
-    } catch (error) {
-        // If HEAD request fails, try GET
-        console.error("HEAD request failed:", error.message);
-        try {
-            const response = await axios.get(shortUrl, { timeout: 100000, maxRedirects: 100});
-            return response
-            return response.request.res.responseUrl;
-        } catch (error) {
-            console.error("GET request failed:", error.message);
-            return shortUrl // `request to expand url failed: ${shortUrl}`;  // Return original if both requests fail
-        }
+        console.log("entered try")
+        const unshortenedUrl = await tall(shortUrl)
+        console.log(unshortenedUrl)
+        console.log('Tall url', unshortenedUrl)
+    } catch (err) {
+        console.error('AAAW 👻', err)
     }
+    
+
+    // try{
+    // const response = await fetch(shortUrl, {
+    //     method: 'HEAD',
+    //     redirect: 'follow'
+    //   })
+    //   console.log('Expanded URL:', response.url);
+    //   return response.url; // Return the final unshortened URL
+    // } catch (err) {
+    //     console.error('Error expanding URL:', err);
+    //     return shortUrl; // Return the original URL if an error occurs
+    // }
+
+
+    //Approach 1:
+    // try {
+    //     const response = await axios.head(shortUrl, { timeout: 300000 });
+    //     return response.request.res.responseUrl;  // Get the expanded URL from the response
+    // } catch (error) {
+    //     // If HEAD request fails, try GET
+    //     console.error("HEAD request failed:", error.message);
+    //     try {
+    //         const response = await axios.get(shortUrl, { timeout: 100000, maxRedirects: 100});
+    //         return response
+    //         return response.request.res.responseUrl;
+    //     } catch (error) {
+    //         console.error("GET request failed:", error.message);
+    //         return shortUrl // `request to expand url failed: ${shortUrl}`;  // Return original if both requests fail
+    //     }
+    // }
 
     // Approach 2: Browser imitation (node.js library)
     // const browser = await puppeteer.launch(); // Launch headless browser
@@ -223,8 +249,8 @@ export async function checkUrl(url: string) {
 
 export async function runTests() {
     const testUrls = [
-        "http://www.paypal.com",
-         "http://раyраl.com",
+        // "http://www.paypal.com",
+        //  "http://раyраl.com",
         // "http://paypаl.com",
         // "https://shorturl.at/xXfIb",
         "https://shorturl.at/dH6kn",
@@ -245,7 +271,7 @@ export async function runTests() {
 
     for (let url of testUrls) {
         const result = await checkUrl(url);
-        console.log(getWhois(url))
+        console.log(expandShortenedUrl(url),"hi")
         // try {
         // const expanded = await expandShortenedUrl("https://shorturl.at/dH6kn")
         // console.log(`Expanded: ${expanded}`);
