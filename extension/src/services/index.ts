@@ -4,8 +4,6 @@ import confusables from 'unicode-confusables';
 import axios from 'axios';
 import { trustedDomains, shortenedDomains } from './domains';
 
-export const a = levenshtein.get('', '')
-
 type Checked = { sus: boolean, message?: string };
 
 function isShortenedUrl(url: string) {
@@ -46,7 +44,7 @@ async function getWhois(domain: string) {
     }
 }
 
-function extractMainDomain(url) {
+export function extractMainDomain(url) {
   const {domain} = parse(url);
   console.log(domain)
   return domain;
