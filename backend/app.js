@@ -34,7 +34,7 @@ async function expandShortenedUrl(shortUrl) {
 
 async function getWhois(domain) {
     try {
-        const response = await axios.get(`https://whois-api.whoisxmlapi.com/api/v1?apiKey=YOUR_API_KEY&domainName=${domain}`);
+        const response = await axios.get(`https://whois-api.whoisxmlapi.com/api/v1?apiKey=YOUR_API_KEY&domainName=${domain}`); //placeholder for api key
         const creationDate = response.data.createdDate;
         const domainAgeDays = (new Date() - new Date(creationDate)) / (1000 * 3600 * 24);
 
@@ -185,6 +185,7 @@ async function runTests() {
 
     for (let url of testUrls) {
         const result = await checkUrl(url);
+        console.log(getWhois(url))
         console.log("-------");
         console.log(result);
     }
