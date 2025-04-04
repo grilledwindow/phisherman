@@ -80,18 +80,15 @@ function isSubdomainSpoofed(url) {
 // Placeholder for homoglyph check (you might need an alternative library or custom check)
 function hasHomoglyph(url) {
     // Placeholder: You can integrate homoglyph detection here or remove if not needed.
-    if(confusables.isConfusing(url)){
-        const homoglyphsFound = confusables.confusables(url)
-        .filter(item => item.similarTo)  // Only keep items with 'similarTo' property
-        .map(item => item.similarTo)   // Extract the 'similarTo' value
-        .filter(letter => letter !== 'rn'); // Filter out 'rn' as a fake letter for 'm'
+    const nonLatinRegex = /[^\x00-\x7F]/g
 
-        if (homoglyphsFound > 0){
-            return `Confusable characters '${homoglyphsFound.join("', '")}'`;
-        }
-        console.log(homoglyphsFound)
-        
-    }
+    const nonLatins = url.match(nonLatinRegex) || [];
+
+    // If non-Latin characters are found, return a message
+    if (nonLatins.length > 0) {
+        return `Confusable characters detected: ${nonLatins.join(', ')}`;
+    } 
+
     return null;
 }
 
