@@ -15,10 +15,14 @@ import puppeteer from "puppeteer"
 type Checked = { sus: boolean, message?: string };
 
 function isIPAddress(url){ //ipppp
-    const ipv4Pattern = /^(25[0-5]|2[0-4][0-9]|1?\d{1,2})(\.(25[0-5]|2[0-4][0-9]|1?\d{1,2})){3}$/;
-    const ipv6Pattern = /^\[?([a-fA-F0-9:]+)\]?$/;
+    console.log(`url passed into isIPAddress: ${url}`)
+    const ipv4Pattern = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+    const ipv6Pattern = /^[0-9a-fA-F:]+$/;
+    console.log(`test for ipv4: ${ipv4Pattern.test(url)}`)
+    console.log(`test for ipv6: ${ipv6Pattern.test(url)}`)
 
-    if (ipv4Pattern.test(url) || ipv6Pattern.test(url)){
+    if ((ipv4Pattern.test(url) || ipv6Pattern.test(url))){
+        console.log( `in sus true`)
         return { sus: true, message: `URL uses an IP address instead of a domain!`};
     }
     return { sus: false };
@@ -36,9 +40,9 @@ async function expandShortenedUrl(shortUrl: string) { //exxxxxxx
     if (!isShortenedUrl(shortUrl)) return shortUrl;
 
 
-    console.log("before try")
+    //console.log("before try")
     try {
-        console.log("entered try")
+        //console.log("entered try")
         const unshortenedUrl = await tall(shortUrl)
         console.log(unshortenedUrl)
         console.log('Tall url', unshortenedUrl)
@@ -238,7 +242,7 @@ async function checkUrl(url: string) {
 
     let domainScore = null; // if domainScore stays null at the end, pass it to AI Model
     
-    if(isIPAddress(expandedUrl)){
+    if(isIPAddress(parsedUrl.hostname).sus === true){
         domainScore=5 //high risk 
 
         fullDomain = parsedUrl.hostname
@@ -283,12 +287,12 @@ export async function runTests() {
         // "https://shorturl.at/xXfIb",
         // "https://shorturl.at/dH6kn",
         // "https://shorturl.at/caaqg", // youtube
-        "http://192.168.0.1/login" 
+        "http://192.168.0.1/login" ,
         // "http://www.sub.paypal.com",
         // "http://www.sub-paypal.com",
         // "http://www.paypal.secure.com"
 
-        // "https://paypa1.com",
+        "https://paypa1.secure.com"
         // "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
         // "https://shorturl.at/xXfIb",
         // "https://www.posb.com.sg/redirect?url=https://www.googl3.com", 
