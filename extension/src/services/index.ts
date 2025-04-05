@@ -14,6 +14,17 @@ import puppeteer from "puppeteer"
 
 type Checked = { sus: boolean, message?: string };
 
+function isIPAddress(url){ //ipppp
+    const ipv4Pattern = /^(25[0-5]|2[0-4][0-9]|1?\d{1,2})(\.(25[0-5]|2[0-4][0-9]|1?\d{1,2})){3}$/;
+    const ipv6Pattern = /^\[?([a-fA-F0-9:]+)\]?$/;
+
+    if (ipv4Pattern.test(url) || ipv6Pattern.test(url)){
+        return { sus: true, message: `URL uses an IP address instead of a domain!`};
+    }
+    return { sus: false };
+}
+
+
 function isShortenedUrl(url: string) {
     const { domain } = parse(url);
     console.log(`isshortenedurl, domain: ${domain}`)
@@ -32,7 +43,8 @@ async function expandShortenedUrl(shortUrl: string) { //exxxxxxx
         console.log(unshortenedUrl)
         console.log('Tall url', unshortenedUrl)
     } catch (err) {
-        console.error('AAAW 👻', err)
+        console.error('Error expanding URL 👻', err)
+        return shortUrl;
     }
     
 
@@ -138,7 +150,7 @@ async function getWhois(domain: string) {
     }
 }
 
-export function extractMainDomain(url) {
+function extractMainDomain(url) {
   const {domain} = parse(url);
   console.log(domain)
   return domain;
@@ -200,7 +212,7 @@ function hasHomoglyph(url) {
     return null;
 }
 
-export async function checkUrl(url: string) {
+async function checkUrl(url: string) {
     const expandedUrl = await expandShortenedUrl(url);
     const parsedUrl = new URL(expandedUrl);
     //console.log(parsedUrl)
@@ -225,6 +237,22 @@ export async function checkUrl(url: string) {
     else if (scheme === 'https://') schemeScore = 0;
 
     let domainScore = null; // if domainScore stays null at the end, pass it to AI Model
+    
+    if(isIPAddress(expandedUrl)){
+        domainScore=5 //high risk 
+
+        fullDomain = parsedUrl.hostname
+
+        return [
+                {"content": scheme, type: "scheme", "score": schemeScore},
+                {"content": fullDomain, type: "domain", "score": domainScore},
+                {"content": parsedUrl.pathname, type: "path", "score": null},
+                {"content": ["IP address detected, often used in phishing attempts."], type: "reason"} //skip domain-based checks as invalid url
+            ];
+        }
+    
+    
+
     const reasons = [
         checkHomoglyph(expandedUrl),
         checkTyposquat(expandedUrl),
@@ -249,12 +277,13 @@ export async function checkUrl(url: string) {
 
 export async function runTests() {
     const testUrls = [
-        // "http://www.paypal.com",
-        //  "http://раyраl.com",
+         "http://www.paypal.com",
+         "http://раyраl.com",
         // "http://paypаl.com",
         // "https://shorturl.at/xXfIb",
-        "https://shorturl.at/dH6kn",
-        "https://shorturl.at/caaqg" // youtube
+        // "https://shorturl.at/dH6kn",
+        // "https://shorturl.at/caaqg", // youtube
+        "http://192.168.0.1/login" 
         // "http://www.sub.paypal.com",
         // "http://www.sub-paypal.com",
         // "http://www.paypal.secure.com"
@@ -271,7 +300,6 @@ export async function runTests() {
 
     for (let url of testUrls) {
         const result = await checkUrl(url);
-        console.log(expandShortenedUrl(url),"hi")
         // try {
         // const expanded = await expandShortenedUrl("https://shorturl.at/dH6kn")
         // console.log(`Expanded: ${expanded}`);
@@ -282,4 +310,3 @@ export async function runTests() {
         console.log(result)
     }
 }
-
