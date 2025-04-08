@@ -1,6 +1,7 @@
 import { onMount, createEffect, createSignal, createMemo } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 import { CheckCircle, ErrorCircle, Loader } from '../svg/icons';
+import { createStore } from 'solid-js/store';
 
 type Pos = { left: number, top: number, width: number, height: number };
 type LinkStates = 'safe' | 'unsafe' | 'loading';
@@ -61,6 +62,7 @@ export function DialogHint(props: { id: string, store: DialogStore, position?: a
 
     return (
         <div id={props.id}
+            role="dialog"
             style={{
                 display: store.show ? 'flex' : 'none',
                 position: props.position || 'absolute',
