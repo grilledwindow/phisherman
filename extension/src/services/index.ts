@@ -2,9 +2,9 @@ import { parse } from 'tldts';
 import levenshtein from 'fast-levenshtein';
 import confusables from 'unicode-confusables'; //might not need
 import axios from 'axios';
-import { trustedDomains, shortenedDomains } from './domains';
+import { trustedDomains, shortenedDomains, suspiciousExtensions } from './domains';
 import {tall} from 'tall'
-const whois = require("whois-json");
+//const whois = require("whois-json");
 
 //mission: debug url expander
 // import {https} from "follow-redirects";
@@ -39,8 +39,10 @@ function isShortenedUrl(url: string) {
 async function expandShortenedUrl(shortUrl: string) { //exxxxxxx
     if (!isShortenedUrl(shortUrl)) return shortUrl;
 
+    return (shortUrl); //cant expand shortened url for now, require a server. So just return wtv the input is for now
 
     //console.log("before try")
+
     try {
         //console.log("entered try")
         const unshortenedUrl = await tall(shortUrl)
@@ -136,6 +138,7 @@ async function getWhois(domain: string) {
 
 
     // Approach 2: making use of "whois-json"
+    /*
     try {
         const data = await whois(domain);
 
@@ -151,7 +154,7 @@ async function getWhois(domain: string) {
             : null;
     } catch (error) {
         return `WHOIS lookup failed: ${error.message}`;
-    }
+    }*/
 }
 
 function extractMainDomain(url) {
@@ -191,30 +194,34 @@ function checkHomoglyph(url: string): Checked | null {
     const nonLatinRegex = /[^\x00-\x7F]/g //non latin
     const homoglyphsFound = url.match(nonLatinRegex) || [];
 
-    
-    if (!hasHomoglyph(url)) return null;
-
     if (homoglyphsFound.length > 0) {
 
         return { sus: true, message: `Confusable characters '${homoglyphsFound.join("', '")}'` };
     } else {
         return { sus: false };
     }
+
 }
 
-function hasHomoglyph(url) {
-    // Placeholder: You can integrate homoglyph detection here or remove if not needed.
-    const nonLatinRegex = /[^\x00-\x7F]/g
 
-    const nonLatins = url.match(nonLatinRegex) || [];
 
-    // If non-Latin characters are found, return a message
-    if (nonLatins.length > 0) {
-        return `Confusable characters detected: ${nonLatins.join(', ')}`;
-    } 
 
-    return null;
+function hasDangerousExtensions(path: string): Checked | null {
+    const lowerPath = path.toLowerCase();
+
+    for(const ext of suspiciousExtensions){
+        if(lowerPath.endsWith(ext)){
+
+            return { sus:true, message: `Path ends with suspicious file extension: ${ext}` }
+        }
+    }
+
+    return {sus:false};
+        
+    
 }
+
+
 
 async function checkUrl(url: string) {
     const expandedUrl = await expandShortenedUrl(url);
@@ -240,6 +247,7 @@ async function checkUrl(url: string) {
     if (scheme === 'http://') schemeScore = 0.5;
     else if (scheme === 'https://') schemeScore = 0;
 
+    
     let domainScore = null; // if domainScore stays null at the end, pass it to AI Model
     
     if(isIPAddress(parsedUrl.hostname).sus === true){
@@ -254,33 +262,49 @@ async function checkUrl(url: string) {
                 {"content": ["IP address detected, often used in phishing attempts."], type: "reason"} //skip domain-based checks as invalid url
             ];
         }
-    
-    
 
-    const reasons = [
-        checkHomoglyph(expandedUrl),
-        checkTyposquat(expandedUrl),
-        checkSubdomainSpoofed(expandedUrl)
-    ].reduce<Array<string | undefined>>((reasons, checked) => {
+    
+    const checks = [
+        { check: checkHomoglyph, category: "domain" },
+        { check: checkTyposquat, category: "domain" },
+        { check: checkSubdomainSpoofed, category: "domain" },
+        { check: hasDangerousExtensions, category: "path" }
+    ];
+    
+    //path score
+    let pathScore = null
+
+
+
+
+    const reasons = checks.reduce<Array<string | undefined>>((reasons, {check, category}) => {
+
+        const checked = check(expandedUrl)
         if (checked !== null && checked.sus) {
-            domainScore += 1;
+            if(category === "domain"){
+                domainScore += 1;
+            }else if (category === "path"){
+                pathScore += 1;
+            }
+
             return [checked.message, ...reasons];
         }
         return reasons;
     }, []);
 
-    getWhois(expandedUrl).then(result => result && reasons.push(result));
+    //getWhois(expandedUrl).then(result => result && reasons.push(result));
 
     return [
         {"content": scheme, type: "scheme", "score": schemeScore},
         {"content": fullDomain, type: "domain", "score": domainScore},
-        {"content": parsedUrl.pathname, type: "path", "score": null},
+        {"content": parsedUrl.pathname, type: "path", "score": pathScore},
         {"content": reasons, type: "reason"}
     ]
 }
 
 export async function runTests() {
     const testUrls = [
+        
          "http://www.paypal.com",
          "http://раyраl.com",
         // "http://paypаl.com",
@@ -291,8 +315,9 @@ export async function runTests() {
         // "http://www.sub.paypal.com",
         // "http://www.sub-paypal.com",
         // "http://www.paypal.secure.com"
-
+        "https://chatgpt.com/c/67f7d3f9-e374-800c-ab99-74b54ddffa92.scr",
         "https://paypa1.secure.com"
+        
         // "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
         // "https://shorturl.at/xXfIb",
         // "https://www.posb.com.sg/redirect?url=https://www.googl3.com", 

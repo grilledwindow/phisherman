@@ -1148,3 +1148,25 @@ export const shortenedDomains = [
   "buff.ly"
 ];
 
+export const suspiciousExtensions = [
+  '.exe',    // Executable files that can run harmful programs
+  '.msi',    // Windows Installer files often used for malware delivery
+  '.js',     // JavaScript files that can contain malicious scripts
+  '.vbs',    // Visual Basic scripts commonly used in malware attacks
+  '.bat',    // Batch files that can automate harmful actions
+  '.cmd',    // Command files that can execute harmful commands
+  '.ps1',    // PowerShell scripts, often used for malicious purposes
+  '.jar',    // Java archive files that can contain executable code
+  '.scr',    // Screen saver files that can also be executable programs
+  '.apk',    // Android application files, sometimes used for malicious apps
+  '.zip',    // Compressed archives that might contain malware
+  '.rar',    // Another compressed archive format
+  '.docm',   // Word documents with macros, often used in phishing
+  '.xlsm',   // Excel documents with macros, a common phishing tactic
+  '.pif',    // Program Information Files, often used in old malware
+  '.iso',    // Disc image files that may contain malicious software
+  '.dmg',    // Disk image files for macOS, sometimes used to distribute malware
+  '.7z',     // Another compressed archive format
+  '.tar.gz'  // Compressed tarballs, which may contain malicious scripts or executables
+];
+
