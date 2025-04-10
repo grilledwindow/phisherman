@@ -1,7 +1,6 @@
 import { onMount, createEffect, createSignal, createMemo } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 import { CheckCircle, ErrorCircle, Loader } from '../svg/icons';
-import { createStore } from 'solid-js/store';
 
 type Pos = { left: number, top: number, width: number, height: number };
 type LinkStates = 'safe' | 'unsafe' | 'loading';

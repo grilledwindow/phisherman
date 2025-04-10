@@ -7,8 +7,6 @@ import './style.css';
 import DialogHint, { DialogStore } from './dialog/DialogHint';
 import Popup, { PopupStore } from './popup/Popup';
 import ContextDialog from './dialog/ContextDialog';
-import { runTests } from './services/index';
-runTests();
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'toggle-popup') {
