@@ -2,7 +2,7 @@ import { parse } from 'tldts';
 import levenshtein from 'fast-levenshtein';
 import confusables from 'unicode-confusables'; //might not need
 import axios from 'axios';
-import { trustedDomains, shortenedDomains, suspiciousExtensions } from './domains';
+import { trustedDomains, shortenedDomains, suspiciousExtensions, sensitiveWords } from './domains';
 import {tall} from 'tall'
 //const whois = require("whois-json");
 
@@ -11,6 +11,7 @@ import {tall} from 'tall'
 // import urlExpander from "expand-url";
 // const express = require('express')
 import puppeteer from "puppeteer"
+import { N } from 'vitest/dist/chunks/reporters.d.CfRkRKN2';
 
 type Checked = { sus: boolean, message?: string };
 
@@ -177,7 +178,7 @@ function checkTyposquat(url, threshold = 2): Checked | null  {
     return null;
 }
 
-function checkSubdomainSpoofed(url): Checked | null {
+function checkSubdomainSpoofed(url): Checked | null { 
     const { subdomain } = parse(url);
     for (let trusted of trustedDomains) {
         const trustedBase = trusted.split('.')[0];
@@ -218,7 +219,19 @@ function hasDangerousExtensions(path: string): Checked | null {
 
     return {sus:false};
         
-    
+}
+
+function hasSensitiveWords(path:string): Checked | null{
+    const lowerPath = path.toLowerCase();
+
+    for (const word of sensitiveWords){
+        {if (lowerPath.includes(word)){
+            return {sus:true, message: `Path contains suspicious word: ${word}`}
+        };
+        }
+    }
+
+    return {sus:false};
 }
 
 
@@ -240,7 +253,12 @@ async function checkUrl(url: string) {
     console.log(`test - domain = ${domain}`)
     console.log(`test - subdomain = ${subdomain}`)
 
+    const pathOnly = parsedUrl.pathname;
+    console.log(`test - path = ${pathOnly}`)
+
+
     let fullDomain = subdomain ? subdomain + '.' + domain : domain;
+    console.log(`test - fullDomain = ${fullDomain}`)
 
     // Scheme score
     let schemeScore = 1;
@@ -268,7 +286,8 @@ async function checkUrl(url: string) {
         { check: checkHomoglyph, category: "domain" },
         { check: checkTyposquat, category: "domain" },
         { check: checkSubdomainSpoofed, category: "domain" },
-        { check: hasDangerousExtensions, category: "path" }
+        { check: hasDangerousExtensions, category: "path" },
+        { check: hasSensitiveWords, category: "path" }
     ];
     
     //path score
@@ -279,7 +298,16 @@ async function checkUrl(url: string) {
 
     const reasons = checks.reduce<Array<string | undefined>>((reasons, {check, category}) => {
 
-        const checked = check(expandedUrl)
+            let input;
+        
+            if (category === "domain") {
+                input = fullDomain;
+            } else if (category === "path") {
+                input = pathOnly;
+            }
+
+
+        const checked = check(input)
         if (checked !== null && checked.sus) {
             if(category === "domain"){
                 domainScore += 1;
@@ -305,7 +333,7 @@ async function checkUrl(url: string) {
 export async function runTests() {
     const testUrls = [
         
-         "http://www.paypal.com",
+         "http://www.paypal.com/secure.exe",
          "http://раyраl.com",
         // "http://paypаl.com",
         // "https://shorturl.at/xXfIb",
@@ -316,7 +344,7 @@ export async function runTests() {
         // "http://www.sub-paypal.com",
         // "http://www.paypal.secure.com"
         "https://chatgpt.com/c/67f7d3f9-e374-800c-ab99-74b54ddffa92.scr",
-        "https://paypa1.secure.com"
+        "https://paypal.secure.com"
         
         // "https://confusable-homοglyphs.readthedocs.io/en/latest/apidocumentation.html#confusable-homoglyphs-package",
         // "https://shorturl.at/xXfIb",

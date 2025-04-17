@@ -1170,3 +1170,25 @@ export const suspiciousExtensions = [
   '.tar.gz'  // Compressed tarballs, which may contain malicious scripts or executables
 ];
 
+export const sensitiveWords = [
+  "account",
+  "login",
+  "verify",
+  "update",
+  "confirm",
+  "security",
+  "reset",
+  "password",
+  "session",
+  "admin",
+  "payment",
+  "bank",
+  "secure",
+  "alert",
+  "support",
+  "invoice",
+  "feedback",
+  "help",
+  "warning",
+  "verification"
+];
